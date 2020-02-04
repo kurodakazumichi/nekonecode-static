@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>数学1 関数のグラフ 直線</title>
+  <meta charset="utf-8">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+  <script src="../lib/myMathJax.js"></script>
+  <script src="../../vender/js/konva@3.1.0.js"></script>
+  <script src="../lib/myKonva.js"></script>
+  <script src="../lib/util.js"></script>
+  <link rel="stylesheet" type="text/css" href="../css/graph.css">
+</head>
+
+<body>
+  
+  <header>
+    <h1>直線</h1>
+    <div class="math">$$y=ax+b$$</div>：
+    <div id="math" class="math"></div>
+  </header>
+  <div class="wrapper">
+    <div id="container"></div>
+    <div id="inspector">
+      <ul>
+        <li id="slope"></li>
+        <li id="intercept"></li>
+        <li id="defLowerLimit"></li>
+        <li id="defUpperLimit"></li>
+      </ul>
+    </div>
+  </div>
+
+<script>
+//-----------------------------------------------------------------------------
+// アプリケーション
+class App {
+  constructor() 
+  {
+    // 計算で使用するデータ
+    this.data   = {};
+
+    // プログラムから操作する要素
+    this.dom    = {math:{}, input:{}};
+
+    // グラフ
+    this.graph  = null;
+
+    // グラフに載せる形状
+    this.shapes = {};
+
+    // 初期化
+    this.init();
+  }
+
+  // 直線の方程式
+  fx(x) {
+    const data = this.data;
+    return Number(data.slope) * x + Number(data.intercept);
+  }
+
+  init () {
+    this.initConfig();
+    this.initData();
+    this.initGraph();
+    this.initDom();
+  }
+
+  initConfig() {
+    c.setUnit(20);
+  }
+
+  initData() {
+    this.data =  {
+      slope: 0.5,       // 傾き
+      intercept: 3,   // 切片
+      defLowerLimit:-15, // 定義域(下限)
+      defUpperLimit:15, // 定義域(上限)
+    }
+  }
+
+  initGraph() {
+    this.graph = new Graph("container");
+    this.graph.axisX().axisY();
+
+    this.shapes.mainLine = sShape.solidLine();
+    this.shapes.overLine1 = sShape.brokenLine();
+    this.shapes.overLine2 = sShape.brokenLine();
+    this.shapes.lowVLine = sShape.brokenLine(1);
+    this.shapes.lowHLine = sShape.brokenLine(1);
+    this.shapes.highVLine = sShape.brokenLine(1);
+    this.shapes.highHLine = sShape.brokenLine(1);
+    this.shapes.lowPoint = sShape.dot1();
+    this.shapes.highPoint = sShape.dot1("#f00");
+    this.shapes.interceptPoint = sShape.dot1("#0f0");
+    this.shapes.lowerText = sShape.text(this.data.defLowerLimit);
+    this.shapes.upperText = sShape.text(this.data.defUpperLimit);
+    this.shapes.interceptText = sShape.text(this.data.intercept);
+    this.shapes.posText1 = sShape.text();
+    this.shapes.posText2 = sShape.text();
+    this.graph.add(this.shapes);
+  }
+
+  initDom() {
+    this.dom = {
+      math: Util.id("math"),
+      input: {
+        // 傾き
+        slope: this.makeSlopeSlider(),
+        // 切片
+        intercept: this.makeInterceptSlider(),
+        // 定義域(下限)
+        defLowerLimit: this.makeDefLowerLimit(),
+        // 定義域(上限)
+        defUpperLimit: this.makeDefUpperLimit(),
+      }
+    }
+  }
+  //---------------------------------------------------------------------------
+  // dom making
+  //---------------------------------------------------------------------------
+  makeSlopeSlider() {
+    return new InputSlider("slope", { 
+      title   : "傾き(a)",
+      value   : this.data.slope,
+      onInput : this.onInputSlopeSlider.bind(this),
+      onChange: this.onChange.bind(this),
+    });
+  }
+
+  makeInterceptSlider() {
+    return new InputSlider("intercept", {
+      title  : "切片(b)", 
+      value  : this.data.intercept,
+      min    : c.d,
+      max    : c.t,
+      onInput:this.onInputInterceptSlider.bind(this),
+      onChange: this.onChange.bind(this),
+    });
+  }
+
+  makeDefLowerLimit() {
+    // 定義域(下限)
+    return new InputSlider("defLowerLimit",{
+      title  : "定義域(下限)",
+      value  : this.data.defLowerLimit,
+      min    : c.l,
+      max    : c.r,
+      onInput: this.onInputDefLowerLimit.bind(this),
+    })
+  }
+
+  makeDefUpperLimit() {
+    return new InputSlider("defUpperLimit",{
+      title  : "定義域(上限)",
+      value  : this.data.defUpperLimit,
+      min    : c.l,
+      max    : c.r,
+      onInput: this.onInputDefUpperLimit.bind(this),
+    });
+  }
+
+  //---------------------------------------------------------------------------
+  // Events
+  //---------------------------------------------------------------------------
+  onInputSlopeSlider(e) {
+    this.data.slope = Number(e.target.value);
+    this.drawGraph();
+  }
+
+  onInputInterceptSlider(e) {
+    this.data.intercept = Number(e.target.value);
+    this.drawGraph();
+  }
+
+  onInputDefLowerLimit(e) {
+    const high     = this.data.defUpperLimit;
+    const maybeLow = Number(e.target.value);
+    const low      = Math.min(maybeLow, high);
+    e.target.value = this.data.defLowerLimit = low;
+    this.drawGraph();
+  }
+
+  onInputDefUpperLimit(e) {
+    const low       = this.data.defLowerLimit;
+    const maybeHigh = Number(e.target.value);
+    const high = Math.max(maybeHigh, low);
+    e.target.value = this.data.defUpperLimit = high;
+    this.drawGraph();
+  }
+
+  onChange(e) {
+    this.drawMath();
+  }
+
+  //---------------------------------------------------------------------------
+  // Draw
+  //---------------------------------------------------------------------------
+  drawMath() {
+    const { math } = this.dom;
+    const data     = this.data;
+
+    const s = this.data.slope;
+    const i = Util.abs(this.data.intercept);
+    const sign = Util.sign(this.data.intercept);
+
+    MyMathJax.preview(math, `$$${s}x ${sign} ${i}$$`)
+  }
+
+  drawGraph() {
+    const shapes = this.shapes;
+    const {defLowerLimit: low, defUpperLimit: high } = this.data;
+    
+    shapes.mainLine.setAttr("points", points([
+      low, this.fx(low), high, this.fx(high)
+    ]));
+    shapes.overLine1.setAttr("points", points([
+      c.l, this.fx(c.l), low, this.fx(low),
+    ]));
+    shapes.overLine2.setAttr("points", points([
+      high, this.fx(high), c.r, this.fx(c.r)
+    ]));
+    shapes.lowVLine.setAttr("points", points([
+      0, this.fx(low), low, this.fx(low)
+    ]));
+    shapes.lowHLine.setAttr("points", points([
+      low, 0, low, this.fx(low)
+    ]))
+    shapes.highVLine.setAttr("points", points([
+      high, 0, high, this.fx(high) 
+    ]));
+    shapes.highHLine.setAttr("points", points([
+      0, this.fx(high), high, this.fx(high)
+    ]))
+    shapes.lowPoint.setAttrs(xy(low, 0));
+    shapes.highPoint.setAttrs(xy(high,0));
+    shapes.interceptPoint.setAttrs(xy(0, this.data.intercept));
+
+    // 定義域(下限)の値
+    shapes.lowerText.setAttrs({
+      x: x(low),
+      y: y(-0.4),
+      text: this.data.defLowerLimit,
+    })
+
+    // 定義域(上限)の値
+    shapes.upperText.setAttrs({
+      x: x(high),
+      y: y(-0.4),
+      text: this.data.defUpperLimit,
+    })
+
+    const isNegative = (this.data.slope < 0);
+    const v = new Vector2(this.data.slope, (isNegative)? -1:1).normalize;
+
+    // 定義域(下限)の座標
+    shapes.posText1.setAttrs({
+      x: x(low + ((isNegative)? -v.x:v.x)),
+      y: y(this.fx(low) - v.y),
+      text: `(${low.toFixed(1)},${this.fx(low).toFixed(1)})`
+    })
+
+    // 定義域(上限)の座標
+    shapes.posText2.setAttrs({
+      x: x(high + ((isNegative)? -v.x:v.x)),
+      y: y(this.fx(high) - v.y),
+      text: `(${high.toFixed(1)},${this.fx(high).toFixed(1)})`
+    })
+
+    // Y切片の値
+    shapes.interceptText.setAttrs({
+      x: x(0.4),
+      y: y(this.data.intercept - v.y),
+      text: this.data.intercept
+    });
+
+    this.graph.draw();
+  }
+
+  draw() {
+    this.drawMath();
+    this.drawGraph();
+  }
+
+}
+
+const app = new App();
+app.draw();
+
+</script> 
+</body>
+</html>

@@ -1,0 +1,64 @@
+/* Konvaのcanvas */
+.konvajs-content { border:1px solid #000;}
+
+/* header */
+header {
+  display: flex;
+  align-items: center;
+  height:90px;
+  font-size:2em;
+}
+h1 {
+  font-size: 1em;
+  margin-right:1em;
+}
+.math {
+  margin:0 0.5em;
+}
+
+/* GraphとInspectorを囲むラッパー */
+.wrapper {
+  display: flex;
+  justify-content: space-around;
+}
+
+/*  Inspector */
+#inspector {
+  border:1px solid #000;
+  width:400px;
+}
+
+#inspector ul {
+  list-style-type: none;
+  padding:1em;
+  margin:0;
+}
+
+#inspector ul li {
+  margin-bottom: 1em;
+}
+
+.inputSlider label {
+  font-weight: bold;
+  display: inline-block;
+  width:6.5em;
+  border-right:3px solid #999;
+  margin-right:1em;
+}
+
+.inputSlider span{
+  display:inline-block;
+  width:30px;
+}
+
+.inputSlider input {
+  width:200px;
+}
+
+.labelText label {
+  font-weight: bold;
+  display: inline-block;
+  width:6.5em;
+  border-right:3px solid #999;
+  margin-right:1em;
+}

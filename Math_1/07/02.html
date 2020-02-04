@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>数学1 関数のグラフ ２次関数(1)</title>
+  <meta charset="utf-8">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+  <script src="../lib/myMathJax.js"></script>
+  <script src="../../vender/js/konva@3.1.0.js"></script>
+  <script src="../lib/myKonva.js"></script>
+  <script src="../lib/util.js"></script>
+  <link rel="stylesheet" type="text/css" href="../css/graph.css">
+  <style>
+  .inputSlider label, .labelText label {
+    width:3.5em;
+  }
+  </style>
+</head>
+
+<body>
+  
+  <header>
+    <h1>２次関数(1)</h1>
+    <div class="math">$$y=a(x - p)^2 + q$$</div>：
+    <div id="math" class="math"></div>
+  </header>
+  <div class="wrapper">
+    <div id="container"></div>
+    <div id="inspector">
+      <ul>
+        <li id="a"></li>
+        <li id="p"></li>
+        <li id="q"></li>
+        <li id="x"></li>
+        <li id="axis"></li>
+        <li id="apex"></li>
+        <li id="explain"></li>
+      </ul>
+    </div>
+  </div>
+
+<script>
+//-----------------------------------------------------------------------------
+// アプリケーション
+class App {
+  constructor() 
+  {
+    // 計算で使用するデータ
+    this.data   = {};
+
+    // プログラムから操作する要素
+    this.dom    = {math:{}, input:{}};
+
+    // グラフ
+    this.graph  = null;
+
+    // グラフに載せる形状
+    this.shapes = {};
+
+    // 初期化
+    this.init();
+  }
+
+  // 方程式
+  fx(x) {
+    const {a, p, q} = this.data;
+    return a * ((x - p) * (x - p)) + q;
+  }
+
+  init () {
+    this.initConfig();
+    this.initData();
+    this.initGraph();
+    this.initDom();
+  }
+
+  initConfig() {
+    c.setUnit(20);
+  }
+
+  initData() {
+    this.data =  {
+      a:0.5,
+      p:3,
+      q:3,
+      x:-1,
+    }
+  }
+
+  initGraph() {
+    this.graph = new Graph("container");
+    this.graph.axisX().axisY();
+
+    this.shapes.lineMain = sShape.solidLine();
+    this.shapes.dotApex  = sShape.dot1("#f00");
+    this.shapes.dotX     = sShape.dot1();
+    this.shapes.dotNow   = sShape.dot1("#00f");
+    this.shapes.lineVH   = sShape.brokenLine(1);
+    this.shapes.textApex = sShape.text();
+    this.shapes.textX    = sShape.text();
+    this.shapes.textY    = sShape.text();
+    this.graph.add(this.shapes);
+  }
+
+  initDom() {
+    this.dom = {
+      math: Util.id("math"),
+      input: {
+        a: this.makeSliderA(),
+        p: this.makeSliderP(),
+        q: this.makeSliderQ(),
+        x: this.makeSliderX(),
+      },
+      text: {
+        explain: Util.id("explain"),
+        apex   : this.makeLabelTextApex(),
+        axis   : this.makeLabelTextAxis(),
+      }
+    }
+  }
+
+  //---------------------------------------------------------------------------
+  // dom making
+  //---------------------------------------------------------------------------
+  makeSliderA() {
+    const {a} = this.data;
+
+    return new InputSlider("a", {
+      title:"a",
+      value:a,
+      min:-3,
+      max:3,
+
+      step:0.01,
+      onInput: (e) => {
+        this.data.a = Number(e.target.value);
+        this.drawGraph();
+        this.drawInspector();
+      },
+      onChange: this.onChange.bind(this),
+    })
+  }
+
+  makeSliderP() {
+    const {p} = this.data;
+
+    return new InputSlider("p", {
+      title:"p",
+      value:p,
+      min: c.l,
+      max: c.r,
+      onInput: (e) => {
+        this.data.p = Number(e.target.value);
+        this.drawGraph();
+        this.drawInspector();
+      },
+      onChange: this.onChange.bind(this),
+    })
+  }
+
+  makeSliderQ() {
+    const {q} = this.data;
+
+    return new InputSlider("q", {
+      title:"q",
+      value:q,
+      min:c.d,
+      max:c.t,
+      onInput: (e) => {
+        this.data.q = Number(e.target.value);
+        this.drawGraph();
+        this.drawInspector();
+      },
+      onChange: this.onChange.bind(this),
+    })
+  }
+
+  makeSliderX() {
+    const {x} = this.data;
+
+    return new InputSlider("x", {
+      title: "x",
+      value: x,
+      min: c.l,
+      max: c.r,
+      onInput: (e) => {
+        this.data.x = Number(e.target.value);
+        this.drawGraph();
+      },
+    })
+  }
+
+  makeLabelTextApex() {
+    const { p, q } = this.data;
+
+    return new LabelText("apex", {
+      title: "頂点",
+      text : `(${p}, ${q})`
+    });
+  }
+
+  makeLabelTextAxis() {
+    const { x } = this.data;
+
+    return new LabelText("axis", {
+      title: "軸",
+      text : `x=${x}`
+    })
+  }
+
+  //---------------------------------------------------------------------------
+  // Events
+  //---------------------------------------------------------------------------
+  onChange(e) {
+    this.drawMath();
+  }
+
+  //---------------------------------------------------------------------------
+  // update Shapes
+  //---------------------------------------------------------------------------
+  // 主線
+  updateShapeLineMain() {
+    const shapes = this.shapes;
+    const p = [];
+
+    // 左端から右端に向かって0.1刻みで座標のリストを生成
+    for(let x = c.l; x <= c.r; x+=0.1) {
+      p.push(x);
+      p.push(this.fx(x));
+    }
+
+    shapes.lineMain.setAttrs({points: points(p)});
+  }
+
+  updateShapeDotApex() {
+    const {dotApex:apex} = this.shapes;
+    const {p,q} = this.data;
+    apex.setAttrs(xy(p, q))
+  }
+
+  updateShapeDotX() {
+    const {x} = this.data;
+    this.shapes.dotX.setAttrs(xy(x, 0));
+  }
+
+  updateShapeDotNow() {
+    const { dotNow } = this.shapes;
+    const {x} = this.data;
+    const y = this.fx(x);
+
+    dotNow.setAttrs(xy(x, y));
+  }
+
+  updateShapeLineVH() {
+    const {lineVH} = this.shapes;
+    const {x} = this.data;
+    const y = this.fx(x);
+
+    lineVH.setAttrs({points: points([
+      x, 0, x, y, 0, y
+    ])})
+  }
+
+  updateShapeTextApex() {
+    const { textApex } = this.shapes;
+    const { a, p, q } = this.data;
+
+    textApex.setAttrs(xy(p, (a < 0)? q + 1:q - 0.3));
+    textApex.setAttr("text", `(${p}, ${q})`);
+  }
+
+  updateShapeTextX() {
+    const { textX } = this.shapes;
+    const { x } = this.data;
+
+    textX.setAttrs(xy(x + 0.4, -0.5));
+    textX.setAttr("text", x);
+  }
+
+  updateShapeTextY() {
+    const { textY } = this.shapes;
+    const { x } = this.data;
+    const y = this.fx(x);
+
+    textY.setAttrs(xy((x < 0)? 0.5:-2, y + 0.4));
+    textY.setAttr("text", y.toFixed(1));
+  }
+  //---------------------------------------------------------------------------
+  // Draw
+  //---------------------------------------------------------------------------
+  drawMath() {
+    const { math } = this.dom;
+    const { a, p, q } = this.data;
+    MyMathJax.preview(math, `$$y=${a}(x${Util.signed(p)})^2${Util.signed(q)}$$`)
+  }
+
+  drawGraph() {
+    this.updateShapeLineMain();
+    this.updateShapeDotApex();
+    this.updateShapeDotX();
+    this.updateShapeDotNow();
+    this.updateShapeLineVH();
+    this.updateShapeTextApex();
+    this.updateShapeTextX();
+    this.updateShapeTextY();
+    this.graph.draw();
+  }
+
+  drawInspector() {
+    const { explain, axis, apex } = this.dom.text;
+    const { a, p, q } = this.data;
+
+    // 軸
+    axis.text = `x=${p}`;
+
+    // 頂点
+    apex.text = `(${p}, ${q})`;
+
+    // 解説
+    if (a == 0) {
+      explain.innerText = "水平線";
+    } else if (a < 0) {
+      explain.innerText = "上向きに凸である。";
+    } else {
+      explain.innerText = "下向きに凸である。";
+    }
+  }
+
+  draw() {
+    this.drawMath();
+    this.drawGraph();
+    this.drawInspector();
+  }
+
+}
+
+const app = new App();
+app.draw();
+
+</script> 
+</body>
+</html>

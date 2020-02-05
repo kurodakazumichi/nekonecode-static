@@ -14,8 +14,20 @@ class Quadratic
   get a() { return this._a; }
   set a(v) { this._a = Number(v); }
 
+  /** bの操作 */
   get b() { return this._b; }
+  set b(v) {
+    this._b = Number(v);
+    this._p = this.calcP_By_ab(this.a, this.b);
+    this._q = this.calcQ_By_abc(this.a, this.b, this.c);
+  }
+
+  /** cの操作 */
   get c() { return this._c; }
+  set c(v) {
+    this._c = Number(v);
+    this._q = this.calcQ_By_abc(this.a, this.b, this.c);
+  }
 
   /** pの操作 */
   get p() { return this._p; }

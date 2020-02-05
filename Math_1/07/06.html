@@ -43,7 +43,6 @@
       </ul>
     </div>
   </div>
-
 <script>
 //-----------------------------------------------------------------------------
 // アプリケーション
@@ -366,25 +365,11 @@ class App {
   }
 
   drawInspector() {
-    // const { explain, apex, slope } = this.dom.text;
-    // const { a, p, q, isInvalid } = this;
+    const { explain, apex, slope } = this.dom.text;
 
-    // // 頂点
-    // apex.text = (isInvalid)? "なし" : `(${p}, ${q})`;
-
-    // // 傾き
-    // slope.text = (isInvalid)? "なし":a.toFixed(2);
-
-    // // 解説
-    // if (isInvalid) {
-    //   explain.innerText = "存在しない";
-    // } else if (a == 0) {
-    //   explain.innerText = "水平線";
-    // } else if (a < 0) {
-    //   explain.innerText = "上向きに凸である。";
-    // } else {
-    //   explain.innerText = "下向きに凸である。";
-    // }
+    apex.text = this.quad.toApexString();
+    slope.text = this.quad.toAString();
+    explain.innerText = this.quad.toString();
   }
 
   draw() {

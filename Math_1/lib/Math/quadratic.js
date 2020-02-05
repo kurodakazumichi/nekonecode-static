@@ -64,8 +64,20 @@ class Quadratic
   get isInvalid() {
     const { a } = this;
     if (isNaN(a)) return true;
-    if (a == Math.abs(Infinity)) return true;
+    if (Infinity == Math.abs(a)) return true;
     return false;
+  }
+
+  /** 最大値 */
+  get max() {
+    if (this.a <= 0) return undefined;
+    return this.apex.y;
+  }
+
+  /** 最小値 */
+  get min() {
+    if (0 <= this.a) return undefined;
+    return this.apex.y;
   }
 
   //---------------------------------------------------------------------------
@@ -243,17 +255,29 @@ class Quadratic
   }
 
   /** 二次関数に関する文字列 */
-  toString() {
-    const a = this.a;
+  toString(fixed=1) {
+    const { a } = this;
+
     // 解説
     if (this.isInvalid) return "この２次関数は無効";
 
+    const explains = ["この２次関数は"];
+
     if (a == 0) {
-      return "水平線";
+      explains.push("水平線である。");
     } else if (a < 0) {
-      return "上向きに凸である。";
+      explains.push("上向きに凸である。");
     } else {
-      return "下向きに凸である。";
+      explains.push("下向きに凸である。")
     }
+
+    // 最大値・最小値
+    if (this.max) {
+      explains.push(`x=${this.apex.x.toFixed(fixed)}の時、最大値${this.max.toFixed(fixed)}をとり、最小値はない。`);
+    } else {
+      explains.push(`x=${this.apex.x.toFixed(fixed)}の時、最小値${this.min.toFixed(fixed)}をとり、最大値はない。`);
+    }
+
+    return explains.join("\n");
   }
 }

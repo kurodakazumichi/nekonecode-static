@@ -264,9 +264,9 @@ class App {
   makeShapes() {
     this.shapes.lineMain  = sShape.solidLine();
     this.shapes.lineAxis  = sShape.brokenLine(1);
-    this.shapes.dotA      = sShape.dot1("#00f");
-    this.shapes.dotB      = sShape.dot1("#00f");
-    this.shapes.dotC      = sShape.dot1("#00f");
+    this.shapes.dotA      = sShape.dot("#00f");
+    this.shapes.dotB      = sShape.dot("#00f");
+    this.shapes.dotC      = sShape.dot("#00f");
     this.shapes.textA     = sShape.text();
     this.shapes.textB     = sShape.text();
     this.shapes.textC     = sShape.text();
@@ -275,7 +275,6 @@ class App {
   
   // 主線
   updateShapeLineMain() {
-    const shapes = this.shapes;
     const p = [];
 
     if (!this.quad.isInvalid)
@@ -287,59 +286,56 @@ class App {
       }
     }
 
-    shapes.lineMain.setAttrs({points: points(p)});
+    this.shapes.lineMain.points(p);
   }
 
   updateShapeLineAxis() {
-    const { lineAxis } = this.shapes;
     const { axisX } = this.data;
 
-    lineAxis.setAttrs({
+    this.shapes.lineAxis.setAttrs({
       points: points([axisX, c.d, axisX, c.t])
     })
     
   }
 
   updateShapeDotA() {
-    const { dotA } = this.shapes;
     const { Ax, Ay } = this.data;
-    dotA.setAttrs(xy(Ax, Ay));
+    this.shapes.dotA.xy(Ax, Ay);
   }
 
   updateShapeDotB() {
-    const { dotB } = this.shapes;
     const { Bx, By } = this.data;
-    dotB.setAttrs(xy(Bx, By));
+    this.shapes.dotB.xy(Bx, By);
   }
 
   updateShapeDotC() {
-    const { dotC } = this.shapes;
     const { Cx, Cy } = this.data;
-    dotC.setAttrs(xy(Cx, Cy));
+    this.shapes.dotC.xy(Cx, Cy);
   }
 
   updateShapeTextA() {
-    const { textA } = this.shapes;
     const { Ax, Ay } = this.data;
 
-    textA.setAttrs(xy(Ax + 0.4, Ay - 0.4));
-    textA.setAttr("text", `A (${Ax}, ${Ay})`);
+    this.shapes.textA
+      .xy(Ax + 0.4, Ay - 0.4)
+      .text(`A (${Ax}, ${Ay})`);
   }
 
   updateShapeTextB() {
-    const { textB } = this.shapes;
     const { Bx, By } = this.data;
 
-    textB.setAttrs(xy(Bx + 0.4, By - 0.4));
-    textB.setAttr("text", `B (${Bx}, ${By})`);
+    this.shapes.textB
+      .xy(Bx + 0.4, By - 0.4)
+      .text(`B (${Bx}, ${By})`);
   }
 
   updateShapeTextC() {
     const { textC } = this.shapes;
     const { Cx, Cy } = this.data;
 
-    textC.setAttrs(xy(Cx + 0.4, Cy - 0.4));
-    textC.setAttr("text", `C (${Cx}, ${Cy})`);
+    this.shapes.textC
+      .xy(Cx + 0.4, Cy - 0.4)
+      .text(`C (${Cx}, ${Cy})`);
   }
 
   //---------------------------------------------------------------------------

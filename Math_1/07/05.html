@@ -259,9 +259,9 @@ class App {
   makeShapes() {
     this.shapes.lineMain  = sShape.solidLine();
     this.shapes.lineAxis  = sShape.brokenLine(1);
-    this.shapes.dotApex   = sShape.dot1("#f00");
-    this.shapes.dotPass1  = sShape.dot1("#00f");
-    this.shapes.dotPass2  = sShape.dot1("#00f");
+    this.shapes.dotApex   = sShape.dot("#f00");
+    this.shapes.dotPass1  = sShape.dot("#00f");
+    this.shapes.dotPass2  = sShape.dot("#00f");
     this.shapes.textApex  = sShape.text();
     this.shapes.textPass1 = sShape.text();
     this.shapes.textPass2 = sShape.text();
@@ -282,41 +282,37 @@ class App {
       }
     }
 
-    shapes.lineMain.setAttrs({points: points(p)});
+    shapes.lineMain.points(p);
   }
 
   updateShapeLineAxis() {
     const { lineAxis } = this.shapes;
     const { axisX } = this.data;
 
-    lineAxis.setAttrs({
-      points: points([axisX, c.d, axisX, c.t])
-    })
-    
+    lineAxis.points([axisX, c.d, axisX, c.t]);
   }
 
   updateShapeDotApex() {
     const { dotApex } = this.shapes;
     const { a, p, q } = this;
 
-    if (this.isInvalid) {
-      dotApex.setAttr("visible", false);
-    } else {
-      dotApex.setAttr("visible", true);
-      dotApex.setAttrs(xy(p, q))
+    dotApex.visible(!this.isInvalid);
+    
+    if (!this.isInvalid) {
+      dotApex.xy(p, q);
     }
   }
 
   updateShapeDotPass1() {
     const { dotPass1 } = this.shapes;
     const { x1, y1 } = this.data;
-    dotPass1.setAttrs(xy(x1, y1));
+    dotPass1.xy(x1, y1);
   }
 
   updateShapeDotPass2() {
     const { dotPass2 } = this.shapes;
     const { x2, y2 } = this.data;
-    dotPass2.setAttrs(xy(x2, y2));
+    dotPass2.xy(x2, y2);
   }
 
   updateShapeTextApex() {
@@ -325,12 +321,13 @@ class App {
 
     const isToUp = (!this.isInvalid && 0 < a);
 
-    if (this.isInvalid) { 
-      textApex.setAttr("visible", false);
-    } else {
-      textApex.setAttr("visible", true);
-      textApex.setAttrs(xy(p, (isToUp)? q - 0.3:q + 1));
-      textApex.setAttr("text", `(${p.toFixed(1)}, ${q.toFixed(1)})`);
+    textApex.visible(!this.isInvalid);
+
+    if (!this.isInvalid) { 
+      textApex
+        .x(p)
+        .y((isToUp)? q - 0.3:q + 1)
+        .text(`(${p.toFixed(1)}, ${q.toFixed(1)})`);
     }
   }
 
@@ -341,8 +338,10 @@ class App {
 
     const isToUp = (!this.isInvalid && 0 < a);
 
-    textPass1.setAttrs(xy(x1, (isToUp)? y1 - 0.3:y1 + 1));
-    textPass1.setAttr("text", `(${x1.toFixed(1)}, ${y1.toFixed(1)})`);
+    textPass1
+      .x(x1)
+      .y((isToUp)? y1 - 0.3:y1 + 1)
+      .text(`(${x1.toFixed(1)}, ${y1.toFixed(1)})`);
   }
 
   updateShapeTextPass2() {
@@ -352,8 +351,10 @@ class App {
 
     const isToUp = (!this.isInvalid && 0 < a);
 
-    textPass2.setAttrs(xy(x2, (isToUp)? y2 - 0.3:y2 + 1));
-    textPass2.setAttr("text", `(${x2.toFixed(1)}, ${y2.toFixed(1)})`);
+    textPass2
+      .x(x2)
+      .y((isToUp)? y2 - 0.3:y2 + 1)
+      .text(`(${x2.toFixed(1)}, ${y2.toFixed(1)})`);
   }
   //---------------------------------------------------------------------------
   // Draw

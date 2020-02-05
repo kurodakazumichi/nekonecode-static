@@ -94,9 +94,9 @@ class App {
     this.graph.axisX().axisY();
 
     this.shapes.lineMain = sShape.solidLine();
-    this.shapes.dotApex  = sShape.dot1("#f00");
-    this.shapes.dotX     = sShape.dot1();
-    this.shapes.dotNow   = sShape.dot1("#00f");
+    this.shapes.dotApex  = sShape.dot("#f00");
+    this.shapes.dotX     = sShape.dot();
+    this.shapes.dotNow   = sShape.dot("#00f");
     this.shapes.lineVH   = sShape.brokenLine(1);
     this.shapes.textApex = sShape.text();
     this.shapes.textX    = sShape.text();
@@ -228,18 +228,18 @@ class App {
       p.push(this.fx(x));
     }
 
-    shapes.lineMain.setAttrs({points: points(p)});
+    shapes.lineMain.points(p);
   }
 
   updateShapeDotApex() {
     const {dotApex:apex} = this.shapes;
     const {p,q} = this.quad;
-    apex.setAttrs(xy(p, q))
+    apex.xy(p, q);
   }
 
   updateShapeDotX() {
     const {x} = this.data;
-    this.shapes.dotX.setAttrs(xy(x, 0));
+    this.shapes.dotX.xy(x, 0);
   }
 
   updateShapeDotNow() {
@@ -247,7 +247,7 @@ class App {
     const {x} = this.data;
     const y = this.fx(x);
 
-    dotNow.setAttrs(xy(x, y));
+    dotNow.xy(x, y);
   }
 
   updateShapeLineVH() {
@@ -255,25 +255,24 @@ class App {
     const {x} = this.data;
     const y = this.fx(x);
 
-    lineVH.setAttrs({points: points([
-      x, 0, x, y, 0, y
-    ])})
+    lineVH.points([x, 0, x, y, 0, y]);
   }
 
   updateShapeTextApex() {
     const { textApex } = this.shapes;
     const { a, p, q } = this.quad;
 
-    textApex.setAttrs(xy(p, (a < 0)? q + 1:q - 0.3));
-    textApex.setAttr("text", `(${p}, ${q})`);
+    textApex
+      .x(p)
+      .y((a < 0)? q + 1:q - 0.3)
+      .text(`(${p}, ${q})`);
   }
 
   updateShapeTextX() {
     const { textX } = this.shapes;
     const { x } = this.data;
 
-    textX.setAttrs(xy(x + 0.4, -0.5));
-    textX.setAttr("text", x);
+    textX.xy(x + 0.4, -0.5).text(x);
   }
 
   updateShapeTextY() {
@@ -281,8 +280,7 @@ class App {
     const { x } = this.data;
     const y = this.fx(x);
 
-    textY.setAttrs(xy((x < 0)? 0.5:-2, y + 0.4));
-    textY.setAttr("text", y.toFixed(1));
+    textY.x((x < 0)? 0.5:-2).y(y + 0.4).text(y.toFixed(1));
   }
   //---------------------------------------------------------------------------
   // Draw

@@ -92,9 +92,9 @@ class App {
     this.shapes.lowHLine = sShape.brokenLine(1);
     this.shapes.highVLine = sShape.brokenLine(1);
     this.shapes.highHLine = sShape.brokenLine(1);
-    this.shapes.lowPoint = sShape.dot1();
-    this.shapes.highPoint = sShape.dot1("#f00");
-    this.shapes.interceptPoint = sShape.dot1("#0f0");
+    this.shapes.lowPoint = sShape.dot();
+    this.shapes.highPoint = sShape.dot("#f00");
+    this.shapes.interceptPoint = sShape.dot("#0f0");
     this.shapes.lowerText = sShape.text(this.data.defLowerLimit);
     this.shapes.upperText = sShape.text(this.data.defUpperLimit);
     this.shapes.interceptText = sShape.text(this.data.intercept);
@@ -212,69 +212,49 @@ class App {
   drawGraph() {
     const shapes = this.shapes;
     const {defLowerLimit: low, defUpperLimit: high } = this.data;
-    
-    shapes.mainLine.setAttr("points", points([
-      low, this.fx(low), high, this.fx(high)
-    ]));
-    shapes.overLine1.setAttr("points", points([
-      c.l, this.fx(c.l), low, this.fx(low),
-    ]));
-    shapes.overLine2.setAttr("points", points([
-      high, this.fx(high), c.r, this.fx(c.r)
-    ]));
-    shapes.lowVLine.setAttr("points", points([
-      0, this.fx(low), low, this.fx(low)
-    ]));
-    shapes.lowHLine.setAttr("points", points([
-      low, 0, low, this.fx(low)
-    ]))
-    shapes.highVLine.setAttr("points", points([
-      high, 0, high, this.fx(high) 
-    ]));
-    shapes.highHLine.setAttr("points", points([
-      0, this.fx(high), high, this.fx(high)
-    ]))
-    shapes.lowPoint.setAttrs(xy(low, 0));
-    shapes.highPoint.setAttrs(xy(high,0));
-    shapes.interceptPoint.setAttrs(xy(0, this.data.intercept));
+
+    const loY = this.fx(low);
+    const hiY = this.fx(high);
+    const lY  = this.fx(c.l);
+    const rY  = this.fx(c.r);
+
+    shapes.mainLine.points( [low , loY , high, hiY]);
+    shapes.overLine1.points([c.l , lY  , low , loY]);
+    shapes.overLine2.points([high, hiY , c.r , rY]);
+    shapes.lowVLine.points( [0   , loY , low , loY]);
+    shapes.lowHLine.points( [low , 0   , low , loY]);
+    shapes.highVLine.points([high, 0   , high, hiY ]);
+    shapes.highHLine.points([0   , hiY , high, hiY]);
+    shapes.lowPoint.xy(low, 0);
+    shapes.highPoint.xy(high,0);
+    shapes.interceptPoint.xy(0, this.data.intercept);
 
     // 定義域(下限)の値
-    shapes.lowerText.setAttrs({
-      x: x(low),
-      y: y(-0.4),
-      text: this.data.defLowerLimit,
-    })
+    shapes.lowerText.xy(low, -0.4).text(this.data.defLowerLimit);
 
     // 定義域(上限)の値
-    shapes.upperText.setAttrs({
-      x: x(high),
-      y: y(-0.4),
-      text: this.data.defUpperLimit,
-    })
+    shapes.upperText.xy(high, -0.4).text(this.data.defUpperLimit);
 
     const isNegative = (this.data.slope < 0);
     const v = new Vector2(this.data.slope, (isNegative)? -1:1).normalize;
 
     // 定義域(下限)の座標
-    shapes.posText1.setAttrs({
-      x: x(low + ((isNegative)? -v.x:v.x)),
-      y: y(this.fx(low) - v.y),
-      text: `(${low.toFixed(1)},${this.fx(low).toFixed(1)})`
-    })
+    shapes.posText1
+      .x(low + ((isNegative)? -v.x:v.x))
+      .y(this.fx(low) - v.y)
+      .text(`(${low.toFixed(1)},${this.fx(low).toFixed(1)})`);
 
     // 定義域(上限)の座標
-    shapes.posText2.setAttrs({
-      x: x(high + ((isNegative)? -v.x:v.x)),
-      y: y(this.fx(high) - v.y),
-      text: `(${high.toFixed(1)},${this.fx(high).toFixed(1)})`
-    })
+    shapes.posText2
+      .x(high + ((isNegative)? -v.x:v.x))
+      .y(this.fx(high) - v.y)
+      .text(`(${high.toFixed(1)},${this.fx(high).toFixed(1)})`)
 
     // Y切片の値
-    shapes.interceptText.setAttrs({
-      x: x(0.4),
-      y: y(this.data.intercept - v.y),
-      text: this.data.intercept
-    });
+    shapes.interceptText
+      .x(0.4)
+      .y(this.data.intercept - v.y)
+      .text(this.data.intercept);
 
     this.graph.draw();
   }

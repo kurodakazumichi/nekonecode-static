@@ -70,13 +70,13 @@ class Quadratic
 
   /** 最大値 */
   get max() {
-    if (this.a <= 0) return undefined;
+    if (0 <= this.a) return undefined;
     return this.apex.y;
   }
 
   /** 最小値 */
   get min() {
-    if (0 <= this.a) return undefined;
+    if (this.a <= 0) return undefined;
     return this.apex.y;
   }
 
@@ -272,9 +272,10 @@ class Quadratic
     }
 
     // 最大値・最小値
-    if (this.max) {
+    if (this.max != undefined) {
       explains.push(`x=${this.apex.x.toFixed(fixed)}の時、最大値${this.max.toFixed(fixed)}をとり、最小値はない。`);
-    } else {
+    } 
+    if (this.min != undefined) {
       explains.push(`x=${this.apex.x.toFixed(fixed)}の時、最小値${this.min.toFixed(fixed)}をとり、最大値はない。`);
     }
 

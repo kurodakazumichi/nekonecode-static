@@ -54,6 +54,14 @@ class Quadratic
     return this.p;
   }
 
+  /** 無効 */
+  get isInvalid() {
+    const { a } = this;
+    if (isNaN(a)) return true;
+    if (a == Math.abs(Infinity)) return true;
+    return false;
+  }
+
   //---------------------------------------------------------------------------
   // 初期化
   //---------------------------------------------------------------------------
@@ -76,6 +84,14 @@ class Quadratic
     this._a = a, this._p = p, this._q = q;
     this._b = this.calcB_By_ap(a, p);
     this._c = this.calcC_By_pq(p, q);
+  }
+
+  /**
+   * 頂点(p, q)と通過する１点(x, y)の情報を元に初期化する 
+   */
+  initByApexAndPassPoint(p, q, x, y) {
+    const a = this.calcA_By_pqxy(p, q, x, y);
+    this.initAPQ(a, p, q);
   }
 
   //---------------------------------------------------------------------------
@@ -102,8 +118,17 @@ class Quadratic
     return p**2 + q;
   }
 
+  /** 頂点pqと通過する１点xyから傾きを計算する */
+  calcA_By_pqxy(p, q, x, y) {
+    const nume = y - q;
+    const deno = (x - p) ** 2;
+    return nume / deno;
+  }
+
   /** xからyを求める */
   fx(x) {
+    if (this.isInvalid) return 0;
+
     const { a, p, q } = this;
     return a * ((x - p) * (x - p)) + q;
   }
@@ -111,6 +136,11 @@ class Quadratic
   //---------------------------------------------------------------------------
   // 文字列
   //---------------------------------------------------------------------------
+  /** 傾き */
+  toAString(fixed = 1) {
+    if (this.isInvalid) return "なし";
+    return this.a.toFixed(fixed);
+  }
 
   /** グラフの軸を表す文字列 */
   toAxisString(fixed = 1) {
@@ -127,6 +157,8 @@ class Quadratic
 
   /** y=a(x-p)^2 + q 形式のLatex文字列 */
   toLatexStringAPQ(fixed = 1) {
+    if (this.isInvalid) return "none";
+
     const a = this.a.toFixed(fixed);
     const p = this.p.toFixed(fixed);
     const q = this.q.toFixed(fixed);
@@ -136,6 +168,8 @@ class Quadratic
 
   /** y=ax^2+bx+c 形式のLatex文字列 */
   toLatexStringABC(fixed = 1) {
+    if (this.isInvalid) return "none";
+
     const a = this.a.toFixed(fixed);
     const b = this.b.toFixed(fixed);
     const c = this.c.toFixed(fixed);
@@ -146,6 +180,8 @@ class Quadratic
   toString() {
     const a = this.a;
     // 解説
+    if (this.isInvalid) return "この２次関数は無効";
+
     if (a == 0) {
       return "水平線";
     } else if (a < 0) {

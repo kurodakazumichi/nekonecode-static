@@ -4,6 +4,12 @@
 class Quadratic 
 {
   constructor() {
+    // このクラスは以下の２次関数の式から組み立てている
+    // y = a(x-p)^2 + q
+    // y = ax^2 + bx + c
+    //
+    // a は 放物線の傾き
+    // (p, q)は頂点になる。
     this._a = this._b = this._c = this._p = this._q = 0;
   }
 
@@ -94,6 +100,16 @@ class Quadratic
     this.initAPQ(a, p, q);
   }
 
+  /**
+   * 軸(x)と通過する２点、(x1, y1), (x2, y2)の情報を元に初期化する
+   */
+  initByAxisAnd2PassPoints(axisX, x1, y1, x2, y2) {
+    const a = this.calcA_By_axixX_x1y1_x2y2(axisX, x1, y1, x2, y2);
+    const q = this.calcQ_By_axixX_x1y1_x2y2(axisX, x1, y1, x2, y2);
+    const p = axisX;
+    this.initAPQ(a, p, q);
+  }
+
   //---------------------------------------------------------------------------
   // 計算
   //---------------------------------------------------------------------------
@@ -125,6 +141,20 @@ class Quadratic
     return nume / deno;
   }
 
+  /** 軸と通過する２点から傾きを計算する */
+  calcA_By_axixX_x1y1_x2y2(axisX, x1, y1, x2, y2) {
+    const nume = y1 - y2;
+    const deno = ((x1 - axisX) ** 2) - ((x2 - axisX) ** 2);
+    return nume / deno;
+  }
+
+  /** 軸と通過する２点からq(頂点のy座標)を計算する */
+  calcQ_By_axixX_x1y1_x2y2(axisX, x1, y1, x2, y2) {
+    const a  = this.calcA_By_axixX_x1y1_x2y2(axisX, x1, y1, x2, y2);
+    const q = y1 - (a * (x1 - axisX)**2);
+    return q;
+  }
+
   /** xからyを求める */
   fx(x) {
     if (this.isInvalid) return 0;
@@ -150,6 +180,7 @@ class Quadratic
 
   /** グラフの頂点を表す文字列 */
   toApexString(fixed = 1) {
+    if (this.isInvalid) return "なし";
     const x = this.apex.x.toFixed(fixed);
     const y = this.apex.y.toFixed(fixed);
     return `(${x}, ${y})`
@@ -163,7 +194,7 @@ class Quadratic
     const p = this.p.toFixed(fixed);
     const q = this.q.toFixed(fixed);
 
-    return `$$y=${a}(x - (${p})) + (${q})$$`;
+    return `$$y=${a}(x - (${p}))^2 + (${q})$$`;
   }
 
   /** y=ax^2+bx+c 形式のLatex文字列 */

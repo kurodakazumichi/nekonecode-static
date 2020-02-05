@@ -9,6 +9,7 @@
   <script src="../../vender/js/konva@3.1.0.js"></script>
   <script src="../lib/myKonva.js"></script>
   <script src="../lib/util.js"></script>
+  <script src="../lib/Math/quadratic.js"></script>
   <link rel="stylesheet" type="text/css" href="../css/graph.css">
   <style>
   .inputSlider label, .labelText label {
@@ -49,6 +50,10 @@
 class App {
   constructor() 
   {
+    // ２次関数
+    this.quad = new Quadratic();
+    this.quad.initByApexAndPassPoint(0, 0, 1, 1);
+
     // 計算で使用するデータ
     this.data   = {};
 
@@ -67,21 +72,11 @@ class App {
 
   // 方程式
   fx(x) {
-    const a = this.a;
-
-    // 傾きが取得できない
-    if (a == Infinity) return 0;
-
-    const { p, q } = this.data;
-    return a * (x - p)**2 + q;
+    return this.quad.fx(x);
   }
 
   get a() {
-    const { p, q, x, y } = this.data;
-
-    const nume = y - q;
-    const deno = (x - p) ** 2;
-    return nume / deno;
+    return this.quad.a;
   }
 
   init () {
@@ -208,20 +203,16 @@ class App {
   }
 
   makeLabelTextAxis() {
-    const { p } = this.data;
-
     return new LabelText("axis", {
       title: "軸",
-      text : `x=${p}`
+      text : this.quad.toAxisString(),
     })
   }
 
   makeLabelTextSlope() {
-    const { a } = this;
-
     return new LabelText("slope", {
       title: "傾き",
-      text : a.toFixed(1)
+      text : this.quad.toAString(),
     });
   }
 
@@ -295,15 +286,12 @@ class App {
 
     MyMathJax.preview(math1, `$$(${p}, ${q})$$`);
     MyMathJax.preview(math2, `$$(${x}, ${y})$$`);
-
-    if (a == Infinity) {
-      MyMathJax.preview(math3, "none");
-    } else {
-      MyMathJax.preview(math3, `$$y=${a.toFixed(2)}(x${Util.signed(p)})^2${Util.signed(q)}$$`)
-    }
+    MyMathJax.preview(math3, this.quad.toLatexStringAPQ());
   }
 
   drawGraph() {
+    const { p, q, x, y } = this.data;
+    this.quad.initByApexAndPassPoint(p, q, x, y);
     this.updateShapeLineMain();
     this.updateShapeDotApex();
     this.updateShapeDotPass();
@@ -314,25 +302,9 @@ class App {
 
   drawInspector() {
     const { explain, axis, slope } = this.dom.text;
-    const { a } = this;
-    const { p, q } = this.data;
-
-    // 軸
-    axis.text = `x=${p.toFixed(1)}`;
-
-    // 傾き
-    slope.text = (a == Infinity)? "なし":a.toFixed(1);
-
-    // 解説
-    if (a == Infinity) {
-      explain.innerText = "存在しない";
-    } else if (a == 0) {
-      explain.innerText = "水平線";
-    } else if (a < 0) {
-      explain.innerText = "上向きに凸である。";
-    } else {
-      explain.innerText = "下向きに凸である。";
-    }
+    axis.text  = this.quad.toAxisString();
+    slope.text = this.quad.toAString();
+    explain.innerText = this.quad.toString()
   }
 
   draw() {

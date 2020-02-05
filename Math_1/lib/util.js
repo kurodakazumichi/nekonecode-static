@@ -22,6 +22,16 @@ class Util {
     const abs  = Util.abs(num);
     return `${sign} ${abs}`
   }
+
+  static toFixed(obj, num) {
+    let r = {};
+
+    Object.keys(obj).map((key) => {
+      r[key] = obj[key].toFixed(num);
+    });
+
+    return r;
+  }
 }
 
 /******************************************************************************

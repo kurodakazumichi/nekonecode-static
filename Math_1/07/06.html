@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>数学1 ２次関数 頂点と通過する１点</title>
+  <meta charset="utf-8">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+  <script src="../lib/myMathJax.js"></script>
+  <script src="../../vender/js/konva@3.1.0.js"></script>
+  <script src="../lib/myKonva.js"></script>
+  <script src="../lib/util.js"></script>
+  <script src="../lib/Math//quadratic.js"></script>
+  <link rel="stylesheet" type="text/css" href="../css/graph.css">
+  <style>
+  .inputSlider label, .labelText label {
+    width:4.5em;
+  }
+  </style>
+</head>
+
+<body>
+  
+  <header>
+    <h1>２次関数</h1>
+    <div>次の３点</div>
+    <div id="math1" class="math">$$A(x, y), B(x, y), C(x, y)$$</div>
+    <div>を通る２次関数は</div>
+    <div id="math2" class="math">$$y=a(x-p)^2+q$$</div>
+  </header>
+  <div class="wrapper">
+    <div id="container"></div>
+    <div id="inspector">
+      <ul>
+        <li id="Ax"></li>
+        <li id="Ay"></li>
+        <li id="Bx"></li>
+        <li id="By"></li>
+        <li id="Cx"></li>
+        <li id="Cy"></li>
+        <li id="slope"></li>
+        <li id="apex"></li>
+        <li id="explain"></li>
+      </ul>
+    </div>
+  </div>
+
+<script>
+//-----------------------------------------------------------------------------
+// アプリケーション
+class App {
+  constructor() 
+  {
+    // 二次関数
+    this.quad = new Quadratic();
+
+    // 計算で使用するデータ
+    this.data   = {};
+
+    // プログラムから操作する要素
+    this.dom    = {math:{}, input:{}};
+
+    // グラフ
+    this.graph  = null;
+
+    // グラフに載せる形状
+    this.shapes = {};
+
+    // 初期化
+    this.init();
+  }
+
+  //---------------------------------------------------------------------------
+  // 初期化
+  init () {
+    this.initConfig();
+    this.initData();
+    this.updateQuad();
+    this.initGraph();
+    this.initDom();
+  }
+
+  initConfig() {
+    c.setUnit(20);
+  }
+
+  initData() {
+    this.data =  {
+      Ax:1,
+      Ay:-2,
+      Bx:-2,
+      By:4,
+      Cx:-3,
+      Cy:2,
+    }
+  }
+
+  initDom() {
+    this.makeDom();
+  }
+
+  initGraph() {
+    this.graph = new Graph("container");
+    this.graph.axisX().axisY();
+    this.makeShapes();
+  }
+
+
+  updateQuad() {
+    const { Ax, Ay, Bx, By, Cx, Cy } = this.data;
+    this.quad.initBy3PassPoints(Ax, Ay, Bx, By, Cx, Cy);
+  }
+
+  //---------------------------------------------------------------------------
+  // dom making
+
+  makeDom() {
+    this.dom = {
+      math1: Util.id("math1"),
+      math2: Util.id("math2"),
+      input: {
+        Ax: this.makeSliderAx(),
+        Ay: this.makeSliderAy(),
+        Bx: this.makeSliderBx(),
+        By: this.makeSliderBy(),
+        Cx: this.makeSliderCx(),
+        Cy: this.makeSliderCy(),
+      },
+      text: {
+        slope  : this.makeLabelTextSlope(),
+        apex   : this.makeLabelTextApex(),
+        explain: Util.id("explain"),
+      }
+    }
+  }
+
+  makeSliderAx() {
+    const { Ax } = this.data;
+
+    return new InputSlider("Ax", {
+      title:"点Ax",
+      value:Ax,
+      min:c.l,
+      max:c.r,
+      step:0.01,
+      onInput: (e) => {
+        this.data.Ax = Number(e.target.value);
+        this.drawGraph();
+        this.drawInspector();
+      },
+      onChange: this.onChange.bind(this),
+    })
+  }
+
+  makeSliderAy() {
+    const { Ay } = this.data;
+
+    return new InputSlider("Ay", {
+      title:"点Ay",
+      value:Ay,
+      min:c.d,
+      max:c.t,
+      step:0.01,
+      onInput: (e) => {
+        this.data.Ay = Number(e.target.value);
+        this.drawGraph();
+        this.drawInspector();
+      },
+      onChange: this.onChange.bind(this),
+    })
+  }
+
+  makeSliderBx() {
+    const { Bx } = this.data;
+
+    return new InputSlider("Bx", {
+      title:"点Bx",
+      value:Bx,
+      min: c.l,
+      max: c.r,
+      onInput: (e) => {
+        this.data.Bx = Number(e.target.value);
+        this.drawGraph();
+        this.drawInspector();
+      },
+      onChange: this.onChange.bind(this),
+    })
+  }
+
+  makeSliderBy() {
+    const { By } = this.data;
+
+    return new InputSlider("By", {
+      title: "点Bt",
+      value: By,
+      min: c.d,
+      max: c.t,
+      onInput: (e) => {
+        this.data.By= Number(e.target.value);
+        this.drawGraph();
+        this.drawInspector();
+      },
+      onChange: this.onChange.bind(this),
+    })
+  }
+
+  makeSliderCx() {
+    const { Cx } = this.data;
+
+    return new InputSlider("Cx", {
+      title:"点Cx",
+      value:Cx,
+      min:c.l,
+      max:c.r,
+      onInput: (e) => {
+        this.data.Cx = Number(e.target.value);
+        this.drawGraph();
+        this.drawInspector();
+      },
+      onChange: this.onChange.bind(this),
+    })
+  }
+
+  makeSliderCy() {
+    const { Cy } = this.data;
+
+    return new InputSlider("Cy", {
+      title:"点Cy",
+      value:Cy,
+      min:c.d,
+      max:c.t,
+      onInput: (e) => {
+        this.data.Cy = Number(e.target.value);
+        this.drawGraph();
+        this.drawInspector();
+      },
+      onChange: this.onChange.bind(this),
+    })
+  }
+
+  makeLabelTextSlope() {
+    return new LabelText("slope", {
+      title: "傾き",
+      text : this.quad.toAString(),
+    });
+  }
+
+  makeLabelTextApex() {
+    return new LabelText("apex", {
+      title: "頂点",
+      text : this.quad.toApexString(),
+    })
+  }
+
+  //---------------------------------------------------------------------------
+  // Events
+  //---------------------------------------------------------------------------
+  onChange(e) {
+    this.drawMath();
+  }
+
+  //---------------------------------------------------------------------------
+  // update Shapes
+  //---------------------------------------------------------------------------
+  makeShapes() {
+    this.shapes.lineMain  = sShape.solidLine();
+    this.shapes.lineAxis  = sShape.brokenLine(1);
+    this.shapes.dotA      = sShape.dot1("#00f");
+    this.shapes.dotB      = sShape.dot1("#00f");
+    this.shapes.dotC      = sShape.dot1("#00f");
+    this.shapes.textA     = sShape.text();
+    this.shapes.textB     = sShape.text();
+    this.shapes.textC     = sShape.text();
+    this.graph.add(this.shapes);
+  }
+  
+  // 主線
+  updateShapeLineMain() {
+    const shapes = this.shapes;
+    const p = [];
+
+    if (!this.quad.isInvalid)
+    {
+      // 左端から右端に向かって0.1刻みで座標のリストを生成
+      for(let x = c.l; x <= c.r; x+=0.1) {
+        p.push(x);
+        p.push(this.quad.fx(x));
+      }
+    }
+
+    shapes.lineMain.setAttrs({points: points(p)});
+  }
+
+  updateShapeLineAxis() {
+    const { lineAxis } = this.shapes;
+    const { axisX } = this.data;
+
+    lineAxis.setAttrs({
+      points: points([axisX, c.d, axisX, c.t])
+    })
+    
+  }
+
+  updateShapeDotA() {
+    const { dotA } = this.shapes;
+    const { Ax, Ay } = this.data;
+    dotA.setAttrs(xy(Ax, Ay));
+  }
+
+  updateShapeDotB() {
+    const { dotB } = this.shapes;
+    const { Bx, By } = this.data;
+    dotB.setAttrs(xy(Bx, By));
+  }
+
+  updateShapeDotC() {
+    const { dotC } = this.shapes;
+    const { Cx, Cy } = this.data;
+    dotC.setAttrs(xy(Cx, Cy));
+  }
+
+  updateShapeTextA() {
+    const { textA } = this.shapes;
+    const { Ax, Ay } = this.data;
+
+    textA.setAttrs(xy(Ax + 0.4, Ay - 0.4));
+    textA.setAttr("text", `A (${Ax}, ${Ay})`);
+  }
+
+  updateShapeTextB() {
+    const { textB } = this.shapes;
+    const { Bx, By } = this.data;
+
+    textB.setAttrs(xy(Bx + 0.4, By - 0.4));
+    textB.setAttr("text", `B (${Bx}, ${By})`);
+  }
+
+  updateShapeTextC() {
+    const { textC } = this.shapes;
+    const { Cx, Cy } = this.data;
+
+    textC.setAttrs(xy(Cx + 0.4, Cy - 0.4));
+    textC.setAttr("text", `C (${Cx}, ${Cy})`);
+  }
+
+  //---------------------------------------------------------------------------
+  // Draw
+  //---------------------------------------------------------------------------
+  drawMath() {
+    const { math1, math2 } = this.dom;
+    const { Ax, Ay, Bx, By, Cx, Cy } = Util.toFixed(this.data, 1);
+
+    MyMathJax.preview(math1, `$$A(${Ax}, ${Ay}), B(${Bx}, ${By}), C(${Cx}, ${Cy})$$`);
+    MyMathJax.preview(math2, this.quad.toLatexStringABC());
+  }
+
+  drawGraph() {
+    this.updateQuad();
+    this.updateShapeLineMain();
+    this.updateShapeDotA();
+    this.updateShapeDotB();
+    this.updateShapeDotC();
+    this.updateShapeTextA();
+    this.updateShapeTextB();
+    this.updateShapeTextC();
+    this.graph.draw();
+  }
+
+  drawInspector() {
+    // const { explain, apex, slope } = this.dom.text;
+    // const { a, p, q, isInvalid } = this;
+
+    // // 頂点
+    // apex.text = (isInvalid)? "なし" : `(${p}, ${q})`;
+
+    // // 傾き
+    // slope.text = (isInvalid)? "なし":a.toFixed(2);
+
+    // // 解説
+    // if (isInvalid) {
+    //   explain.innerText = "存在しない";
+    // } else if (a == 0) {
+    //   explain.innerText = "水平線";
+    // } else if (a < 0) {
+    //   explain.innerText = "上向きに凸である。";
+    // } else {
+    //   explain.innerText = "下向きに凸である。";
+    // }
+  }
+
+  draw() {
+    this.drawMath();
+    this.drawGraph();
+    this.drawInspector();
+  }
+
+}
+
+const app = new App();
+app.draw();
+
+</script> 
+</body>
+</html>

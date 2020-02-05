@@ -110,6 +110,16 @@ class Quadratic
     this.initAPQ(a, p, q);
   }
 
+  /**
+   * 通過する３点、(x1, y1), (x2, y2), (x3, y3)の情報を元に初期化する
+   */
+  initBy3PassPoints(x1, y1, x2, y2, x3, y3) {
+    const a = this.calcA_By_x1y1_x2y2_x3y3(x1, y1, x2, y2, x3, y3);
+    const b = this.calcB_By_x1y1_x2y2_x3y3(x1, y1, x2, y2, x3, y3);
+    const c = this.calcC_By_x1y1_x2y2_x3y3(x1, y1, x2, y2, x3, y3);
+    this.initABC(a, b, c);
+  }
+
   //---------------------------------------------------------------------------
   // 計算
   //---------------------------------------------------------------------------
@@ -154,6 +164,31 @@ class Quadratic
     const q = y1 - (a * (x1 - axisX)**2);
     return q;
   }
+
+  /** ３点から傾きを計算する */
+  calcA_By_x1y1_x2y2_x3y3(x1, y1, x2, y2, x3, y3) {
+    const nume = ((y1 - y2) * (x1 - x3) - (y1 - y3) * (x1 - x2));
+    const deno = ((x1 - x2) * (x1 - x3) * (x2 - x3))
+    return nume / deno;
+  }
+
+  /** ３点からbを計算する */
+  calcB_By_x1y1_x2y2_x3y3(x1, y1, x2, y2, x3, y3) {
+    const a = this.calcA_By_x1y1_x2y2_x3y3(x1, y1, x2, y2, x3, y3);
+    const nume = y1 - y2 - (a * (x1**2 - x2**2));
+    const deno = x1 - x2;
+    return nume / deno;
+  }
+
+  /** 3点からcを計算する */
+  calcC_By_x1y1_x2y2_x3y3(x1, y1, x2, y2, x3, y3) {
+    const a = this.calcA_By_x1y1_x2y2_x3y3(x1, y1, x2, y2, x3, y3);
+    const b = this.calcB_By_x1y1_x2y2_x3y3(x1, y1, x2, y2, x3, y3);
+    const c = y1 + (-a*(x1*x1) - b*x1);
+    return c;
+  }
+
+
 
   /** xからyを求める */
   fx(x) {

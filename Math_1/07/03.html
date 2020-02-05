@@ -9,6 +9,7 @@
   <script src="../../vender/js/konva@3.1.0.js"></script>
   <script src="../lib/myKonva.js"></script>
   <script src="../lib/util.js"></script>
+  <script src="../lib/Math/quadratic.js"></script>
   <link rel="stylesheet" type="text/css" href="../css/graph.css">
   <style>
   .inputSlider label, .labelText label {
@@ -45,6 +46,9 @@
 class App {
   constructor() 
   {
+    this.quad = new Quadratic();
+    this.quad.initABC(0.5, 3, 3);
+
     // 計算で使用するデータ
     this.data   = {};
 
@@ -63,20 +67,17 @@ class App {
 
   // 方程式
   fx(x) {
-    const {a, b, c} = this.data;
-    return (a * x * x) + (b * x) + (c);
+    return this.quad.fx(x);
   }
 
   // 平方完成の定義から p = -(b/(2a))
   get p() {
-    const { a, b } = this.data;
-    return -b / (2 * a);
+    return this.quad.p;
   }
 
   // 平方完成の定義から q = -(b^2-4ac)/(4a)
   get q() {
-    const { a, b, c } = this.data;
-    return -((b**2) - (4 * a * c)) / (4 * a);
+    return this.quad.q;
   }
 
   init () {
@@ -92,9 +93,6 @@ class App {
 
   initData() {
     this.data =  {
-      a:0.5,
-      b:3,
-      c:3,
       x:-1,
     }
   }
@@ -135,7 +133,7 @@ class App {
   // dom making
   //---------------------------------------------------------------------------
   makeSliderA() {
-    const {a} = this.data;
+    const {a} = this.quad;
 
     return new InputSlider("a", {
       title:"a",
@@ -145,7 +143,7 @@ class App {
 
       step:0.01,
       onInput: (e) => {
-        this.data.a = Number(e.target.value);
+        this.quad.a = e.target.value;
         this.drawGraph();
         this.drawInspector();
       },
@@ -154,7 +152,7 @@ class App {
   }
 
   makeSliderB() {
-    const {b} = this.data;
+    const {b} = this.quad;
 
     return new InputSlider("b", {
       title:"b",
@@ -162,7 +160,7 @@ class App {
       min: c.l,
       max: c.r,
       onInput: (e) => {
-        this.data.b = Number(e.target.value);
+        this.quad.b = e.target.value;
         this.drawGraph();
         this.drawInspector();
       },
@@ -171,7 +169,7 @@ class App {
   }
 
   makeSliderC() {
-    const {c:c2} = this.data;
+    const {c:c2} = this.quad;
 
     return new InputSlider("c", {
       title:"c",
@@ -179,7 +177,7 @@ class App {
       min:c.d,
       max:c.t,
       onInput: (e) => {
-        this.data.c = Number(e.target.value);
+        this.quad.c = e.target.value;
         this.drawGraph();
         this.drawInspector();
       },
@@ -203,20 +201,16 @@ class App {
   }
 
   makeLabelTextApex() {
-    const { p, q } = this.data;
-
     return new LabelText("apex", {
       title: "頂点",
-      text : `(${p}, ${q})`
+      text : this.quad.toApexString()
     });
   }
 
   makeLabelTextAxis() {
-    const { x } = this.data;
-
     return new LabelText("axis", {
       title: "軸",
-      text : `x=${x}`
+      text : this.quad.toAxisString()
     })
   }
 
@@ -275,11 +269,11 @@ class App {
 
   updateShapeTextApex() {
     const { textApex } = this.shapes;
-    const { a } = this.data;
+    const { a } = this.quad;
     const { p, q } = this;
 
     textApex.setAttrs(xy(p, (a < 0)? q + 1:q - 0.3));
-    textApex.setAttr("text", `(${p.toFixed(1)}, ${q.toFixed(1)})`);
+    textApex.setAttr("text", this.quad.toApexString());
   }
 
   updateShapeTextX() {
@@ -303,8 +297,7 @@ class App {
   //---------------------------------------------------------------------------
   drawMath() {
     const { math } = this.dom;
-    const { a, b, c } = this.data;
-    MyMathJax.preview(math, `$$y=${a}x^2${Util.signed(b)}x ${Util.signed(c)}$$`)
+    MyMathJax.preview(math, this.quad.toLatexStringABC())
   }
 
   drawGraph() {
@@ -321,23 +314,9 @@ class App {
 
   drawInspector() {
     const { explain, axis, apex } = this.dom.text;
-    const { a } = this.data;
-    const { p, q } = this;
-
-    // 軸
-    axis.text = `x=${p.toFixed(1)}`;
-
-    // 頂点
-    apex.text = `(${p.toFixed(1)}, ${q.toFixed(1)})`;
-
-    // 解説
-    if (a == 0) {
-      explain.innerText = "水平線";
-    } else if (a < 0) {
-      explain.innerText = "上向きに凸である。";
-    } else {
-      explain.innerText = "下向きに凸である。";
-    }
+    axis.text = this.quad.toAxisString();
+    apex.text = this.quad.toApexString();
+    explain.innerText = this.quad.toString();
   }
 
   draw() {

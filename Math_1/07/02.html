@@ -9,6 +9,7 @@
   <script src="../../vender/js/konva@3.1.0.js"></script>
   <script src="../lib/myKonva.js"></script>
   <script src="../lib/util.js"></script>
+  <script src="../lib/Math/quadratic.js"></script>
   <link rel="stylesheet" type="text/css" href="../css/graph.css">
   <style>
   .inputSlider label, .labelText label {
@@ -45,6 +46,10 @@
 class App {
   constructor() 
   {
+    // 二次関数
+    this.quad = new Quadratic();
+    this.quad.initAPQ(0.5, 3, 3);
+
     // 計算で使用するデータ
     this.data   = {};
 
@@ -63,8 +68,7 @@ class App {
 
   // 方程式
   fx(x) {
-    const {a, p, q} = this.data;
-    return a * ((x - p) * (x - p)) + q;
+    return this.quad.fx(x);
   }
 
   init () {
@@ -80,9 +84,6 @@ class App {
 
   initData() {
     this.data =  {
-      a:0.5,
-      p:3,
-      q:3,
       x:-1,
     }
   }
@@ -123,7 +124,7 @@ class App {
   // dom making
   //---------------------------------------------------------------------------
   makeSliderA() {
-    const {a} = this.data;
+    const {a} = this.quad;
 
     return new InputSlider("a", {
       title:"a",
@@ -133,7 +134,8 @@ class App {
 
       step:0.01,
       onInput: (e) => {
-        this.data.a = Number(e.target.value);
+
+        this.quad.a = e.target.value;
         this.drawGraph();
         this.drawInspector();
       },
@@ -142,7 +144,7 @@ class App {
   }
 
   makeSliderP() {
-    const {p} = this.data;
+    const {p} = this.quad;
 
     return new InputSlider("p", {
       title:"p",
@@ -150,7 +152,7 @@ class App {
       min: c.l,
       max: c.r,
       onInput: (e) => {
-        this.data.p = Number(e.target.value);
+        this.quad.p = e.target.value;
         this.drawGraph();
         this.drawInspector();
       },
@@ -159,7 +161,7 @@ class App {
   }
 
   makeSliderQ() {
-    const {q} = this.data;
+    const {q} = this.quad;
 
     return new InputSlider("q", {
       title:"q",
@@ -167,7 +169,7 @@ class App {
       min:c.d,
       max:c.t,
       onInput: (e) => {
-        this.data.q = Number(e.target.value);
+        this.quad.q = e.target.value;
         this.drawGraph();
         this.drawInspector();
       },
@@ -191,20 +193,16 @@ class App {
   }
 
   makeLabelTextApex() {
-    const { p, q } = this.data;
-
     return new LabelText("apex", {
       title: "頂点",
-      text : `(${p}, ${q})`
+      text : this.quad.toApexString()
     });
   }
 
   makeLabelTextAxis() {
-    const { x } = this.data;
-
     return new LabelText("axis", {
       title: "軸",
-      text : `x=${x}`
+      text : this.quad.toAxisString()
     })
   }
 
@@ -234,7 +232,7 @@ class App {
 
   updateShapeDotApex() {
     const {dotApex:apex} = this.shapes;
-    const {p,q} = this.data;
+    const {p,q} = this.quad;
     apex.setAttrs(xy(p, q))
   }
 
@@ -263,7 +261,7 @@ class App {
 
   updateShapeTextApex() {
     const { textApex } = this.shapes;
-    const { a, p, q } = this.data;
+    const { a, p, q } = this.quad;
 
     textApex.setAttrs(xy(p, (a < 0)? q + 1:q - 0.3));
     textApex.setAttr("text", `(${p}, ${q})`);
@@ -290,8 +288,7 @@ class App {
   //---------------------------------------------------------------------------
   drawMath() {
     const { math } = this.dom;
-    const { a, p, q } = this.data;
-    MyMathJax.preview(math, `$$y=${a}(x${Util.signed(p)})^2${Util.signed(q)}$$`)
+    MyMathJax.preview(math, this.quad.toLatexStringAPQ());
   }
 
   drawGraph() {
@@ -308,22 +305,9 @@ class App {
 
   drawInspector() {
     const { explain, axis, apex } = this.dom.text;
-    const { a, p, q } = this.data;
-
-    // 軸
-    axis.text = `x=${p}`;
-
-    // 頂点
-    apex.text = `(${p}, ${q})`;
-
-    // 解説
-    if (a == 0) {
-      explain.innerText = "水平線";
-    } else if (a < 0) {
-      explain.innerText = "上向きに凸である。";
-    } else {
-      explain.innerText = "下向きに凸である。";
-    }
+    axis.text = this.quad.toAxisString();
+    apex.text = this.quad.toApexString();
+    explain.innerText = this.quad.toString();
   }
 
   draw() {

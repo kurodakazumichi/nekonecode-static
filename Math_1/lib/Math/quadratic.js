@@ -11,6 +11,11 @@ class Quadratic
     // a は 放物線の傾き
     // (p, q)は頂点になる。
     this._a = this._b = this._c = this._p = this._q = 0;
+
+    this.domain = {
+      min: new DomainOfDefinition(),
+      max: new DomainOfDefinition(),
+    }
   }
 
   //---------------------------------------------------------------------------
@@ -66,6 +71,12 @@ class Quadratic
     if (isNaN(a)) return true;
     if (Infinity == Math.abs(a)) return true;
     return false;
+  }
+
+  /** 定義域を持つか */
+  get hasDomain() {
+    const { min, max } = this.domain;
+    return (!min.isUndefined || !max.isUndefined);
   }
 
   /** 最大値 */
@@ -254,6 +265,12 @@ class Quadratic
     return `$$y=${a}x^2 + (${b})x + (${c})$$`;
   }
 
+  /** 定義域の文字列 */
+  toDomainStrinig() {
+    const { min, max } = this.domain;
+    return `${min.toString()} ${max.toString()}`;
+  }
+
   /** 二次関数に関する文字列 */
   toString(fixed=1) {
     const { a } = this;
@@ -261,7 +278,7 @@ class Quadratic
     // 解説
     if (this.isInvalid) return "この２次関数は無効";
 
-    const explains = ["この２次関数は"];
+    const explains = ["この２次関数について", ""];
 
     if (a == 0) {
       explains.push("水平線である。");
@@ -270,13 +287,21 @@ class Quadratic
     } else {
       explains.push("下向きに凸である。")
     }
+    // 傾き
+    explains.push("傾き：" + this.toAString());
+    // 頂点
+    explains.push("頂点：" + this.toApexString())
+    // 定義域
+    this.hasDomain && (explains.push("定義域："+this.toDomainStrinig()));
 
-    // 最大値・最小値
-    if (this.max != undefined) {
-      explains.push(`x=${this.apex.x.toFixed(fixed)}の時、最大値${this.max.toFixed(fixed)}をとり、最小値はない。`);
-    } 
-    if (this.min != undefined) {
-      explains.push(`x=${this.apex.x.toFixed(fixed)}の時、最小値${this.min.toFixed(fixed)}をとり、最大値はない。`);
+    // 最大値・最小値(定義域がない場合のみ表示)
+    if (!this.hasDomain) {
+      if (this.max != undefined) {
+        explains.push(`x=${this.apex.x.toFixed(fixed)}の時、最大値${this.max.toFixed(fixed)}をとり、最小値はない。`);
+      } 
+      if (this.min != undefined) {
+        explains.push(`x=${this.apex.x.toFixed(fixed)}の時、最小値${this.min.toFixed(fixed)}をとり、最大値はない。`);
+      }
     }
 
     return explains.join("\n");

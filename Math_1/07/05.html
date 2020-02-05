@@ -9,6 +9,7 @@
   <script src="../../vender/js/konva@3.1.0.js"></script>
   <script src="../lib/myKonva.js"></script>
   <script src="../lib/util.js"></script>
+  <script src="../lib/Math/quadratic.js"></script>
   <link rel="stylesheet" type="text/css" href="../css/graph.css">
   <style>
   .inputSlider label, .labelText label {
@@ -50,6 +51,10 @@
 class App {
   constructor() 
   {
+    // 二次関数
+    this.quad = new Quadratic();
+    this.quad.initByAxisAnd2PassPoints(2, 5, 6, -1, -6);
+    
     // 計算で使用するデータ
     this.data   = {};
 
@@ -68,39 +73,25 @@ class App {
 
   // 方程式
   fx(x) {
-    const { a, p, q } = this;
-
-    // 傾きが取得できない
-    if (this.isInvalid) return 0;
-    return a * (x - p)**2 + q;
+    return this.quad.fx(x);
   }
 
   // 軸と通過する２点から傾きを計算する
   get a() {
-    const { axisX, x1, y1, x2, y2 } = this.data;
-
-    const nume = y1 - y2;
-    const deno = ((x1 - axisX) ** 2) - ((x2 - axisX) ** 2);
-    return nume / deno;
+    return this.quad.a;
   }
 
   // q(頂点のy座標)を計算する
   get q() {
-    const { x1, y1, axisX } = this.data;
-    const { a } = this;
-    const q = y1 - (a * (x1 - axisX)**2);
-    return q;
+    return this.quad.q;
   }
 
   get p() {
-    return this.data.axisX;
+    return this.quad.p;
   }
 
   get isInvalid() {
-    const { a } = this;
-    if (isNaN(a)) return true;
-    if (Infinity == Math.abs(a)) return true;
-    return false;
+    return this.quad.isInvalid;
   }
 
   init () {
@@ -121,11 +112,6 @@ class App {
       y1:6,
       x2:-1,
       y2:-6,
-      
-      p:0,
-      q:0,
-      x:1,
-      y:1,
     }
   }
 
@@ -246,20 +232,16 @@ class App {
   }
 
   makeLabelTextSlope() {
-    const { a } = this;
-
     return new LabelText("slope", {
       title: "傾き",
-      text : a.toFixed(1)
+      text : this.quad.toAString()
     });
   }
 
   makeLabelTextApex() {
-    const { p, q } = this;
-
     return new LabelText("apex", {
       title: "頂点",
-      text : `(${p}, ${q})`
+      text : this.quad.toApexString(),
     })
   }
 
@@ -376,21 +358,18 @@ class App {
   // Draw
   //---------------------------------------------------------------------------
   drawMath() {
-    const { math1, math2 } = this.dom;
+    const { math1, math2, math3 } = this.dom;
     const { axisX, x1, y1, x2, y2 } = this.data;
-    const { a, p, q } = this;
 
     MyMathJax.preview(math1, `$$x=${axisX}$$`);
     MyMathJax.preview(math2, `$$(${x1}, ${y1}), (${x2}, ${y2})$$`);
+    MyMathJax.preview(math3, this.quad.toLatexStringAPQ());
 
-    if (this.isInvalid) {
-      MyMathJax.preview(math3, "none");
-    } else {
-      MyMathJax.preview(math3, `$$y=${a.toFixed(2)}(x${Util.signed(p)})^2${Util.signed(q.toFixed(2))}$$`)
-    }
   }
 
   drawGraph() {
+    const { axisX, x1, y1, x2, y2 } = this.data;
+    this.quad.initByAxisAnd2PassPoints(axisX, x1, y1, x2, y2);
     this.updateShapeLineMain();
     this.updateShapeLineAxis();
     this.updateShapeDotApex();
@@ -405,23 +384,9 @@ class App {
   drawInspector() {
     const { explain, apex, slope } = this.dom.text;
     const { a, p, q, isInvalid } = this;
-
-    // 頂点
-    apex.text = (isInvalid)? "なし" : `(${p}, ${q})`;
-
-    // 傾き
-    slope.text = (isInvalid)? "なし":a.toFixed(2);
-
-    // 解説
-    if (isInvalid) {
-      explain.innerText = "存在しない";
-    } else if (a == 0) {
-      explain.innerText = "水平線";
-    } else if (a < 0) {
-      explain.innerText = "上向きに凸である。";
-    } else {
-      explain.innerText = "下向きに凸である。";
-    }
+    apex.text = this.quad.toApexString();
+    slope.text = this.quad.toAString();
+    explain.innerText = this.quad.toString();
   }
 
   draw() {

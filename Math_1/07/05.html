@@ -37,16 +37,9 @@
         <li id="y1"></li>
         <li id="x2"></li>
         <li id="y2"></li>
+        <li id="slope"></li>
         <li id="apex"></li>
         <li id="explain"></li>
-
-
-        <li id="p"></li>
-        <li id="q"></li>
-        <li id="x"></li>
-        <li id="y"></li>     
-        <li id="axis"></li>
-        <li id="slope"></li>
       </ul>
     </div>
   </div>
@@ -75,21 +68,39 @@ class App {
 
   // 方程式
   fx(x) {
-    const a = this.a;
+    const { a, p, q } = this;
 
     // 傾きが取得できない
-    if (a == Infinity) return 0;
-
-    const { p, q } = this.data;
+    if (this.isInvalid) return 0;
     return a * (x - p)**2 + q;
   }
 
+  // 軸と通過する２点から傾きを計算する
   get a() {
-    const { p, q, x, y } = this.data;
+    const { axisX, x1, y1, x2, y2 } = this.data;
 
-    const nume = y - q;
-    const deno = (x - p) ** 2;
+    const nume = y1 - y2;
+    const deno = ((x1 - axisX) ** 2) - ((x2 - axisX) ** 2);
     return nume / deno;
+  }
+
+  // q(頂点のy座標)を計算する
+  get q() {
+    const { x1, y1, axisX } = this.data;
+    const { a } = this;
+    const q = y1 - (a * (x1 - axisX)**2);
+    return q;
+  }
+
+  get p() {
+    return this.data.axisX;
+  }
+
+  get isInvalid() {
+    const { a } = this;
+    if (isNaN(a)) return true;
+    if (Infinity == Math.abs(a)) return true;
+    return false;
   }
 
   init () {
@@ -105,11 +116,11 @@ class App {
 
   initData() {
     this.data =  {
-      axisX:0,
-      x1:0,
-      y1:0,
-      x2:0,
-      y2:0,
+      axisX:2,
+      x1:5,
+      y1:6,
+      x2:-1,
+      y2:-6,
       
       p:0,
       q:0,
@@ -121,13 +132,7 @@ class App {
   initGraph() {
     this.graph = new Graph("container");
     this.graph.axisX().axisY();
-
-    this.shapes.lineMain = sShape.solidLine();
-    this.shapes.dotApex  = sShape.dot1("#f00");
-    this.shapes.dotPass  = sShape.dot1("#00f");
-    this.shapes.textApex = sShape.text();
-    this.shapes.textPass = sShape.text();
-    this.graph.add(this.shapes);
+    this.makeShapes();
   }
 
   initDom() {
@@ -136,15 +141,16 @@ class App {
       math2: Util.id("math2"),
       math3: Util.id("math3"),
       input: {
-        p: this.makeSliderP(),
-        q: this.makeSliderQ(),
-        x: this.makeSliderX(),
-        y: this.makeSliderY(),
+        axisX : this.makeSliderAxisX(),
+        x1    : this.makeSliderX1(),
+        y1    : this.makeSliderY1(),
+        x2    : this.makeSliderX2(),
+        y2    : this.makeSliderY2(),
       },
       text: {
         explain: Util.id("explain"),
-        axis   : this.makeLabelTextAxis(),
         slope  : this.makeLabelTextSlope(),
+        apex   : this.makeLabelTextApex(),
       }
     }
   }
@@ -152,17 +158,17 @@ class App {
   //---------------------------------------------------------------------------
   // dom making
   //---------------------------------------------------------------------------
-  makeSliderP() {
-    const {p} = this.data;
+  makeSliderAxisX() {
+    const { axisX } = this.data;
 
-    return new InputSlider("p", {
-      title:"頂点x",
-      value:p,
+    return new InputSlider("axisX", {
+      title:"軸(x)",
+      value:axisX,
       min:c.l,
       max:c.r,
       step:0.01,
       onInput: (e) => {
-        this.data.p = Number(e.target.value);
+        this.data.axisX = Number(e.target.value);
         this.drawGraph();
         this.drawInspector();
       },
@@ -170,16 +176,34 @@ class App {
     })
   }
 
-  makeSliderQ() {
-    const {q} = this.data;
+  makeSliderX1() {
+    const { x1 } = this.data;
 
-    return new InputSlider("q", {
-      title:"頂点y",
-      value:q,
+    return new InputSlider("x1", {
+      title:"点1(x)",
+      value:x1,
+      min:c.l,
+      max:c.r,
+      step:0.01,
+      onInput: (e) => {
+        this.data.x1 = Number(e.target.value);
+        this.drawGraph();
+        this.drawInspector();
+      },
+      onChange: this.onChange.bind(this),
+    })
+  }
+
+  makeSliderY1() {
+    const { y1 } = this.data;
+
+    return new InputSlider("y1", {
+      title:"点1(y)",
+      value:y1,
       min: c.d,
       max: c.t,
       onInput: (e) => {
-        this.data.q = Number(e.target.value);
+        this.data.y1 = Number(e.target.value);
         this.drawGraph();
         this.drawInspector();
       },
@@ -187,16 +211,16 @@ class App {
     })
   }
 
-  makeSliderX() {
-    const {x} = this.data;
+  makeSliderX2() {
+    const { x2 } = this.data;
 
-    return new InputSlider("x", {
-      title: "通過点x",
-      value: x,
+    return new InputSlider("x2", {
+      title: "点2(x)",
+      value: x2,
       min: c.l,
       max: c.r,
       onInput: (e) => {
-        this.data.x = Number(e.target.value);
+        this.data.x2 = Number(e.target.value);
         this.drawGraph();
         this.drawInspector();
       },
@@ -204,29 +228,20 @@ class App {
     })
   }
 
-  makeSliderY() {
-    const {y} = this.data;
+  makeSliderY2() {
+    const { y2 } = this.data;
 
-    return new InputSlider("y", {
-      title:"通過点y",
-      value:y,
+    return new InputSlider("y2", {
+      title:"点2(y)",
+      value:y2,
       min:c.d,
       max:c.t,
       onInput: (e) => {
-        this.data.y = Number(e.target.value);
+        this.data.y2 = Number(e.target.value);
         this.drawGraph();
         this.drawInspector();
       },
       onChange: this.onChange.bind(this),
-    })
-  }
-
-  makeLabelTextAxis() {
-    const { p } = this.data;
-
-    return new LabelText("axis", {
-      title: "軸",
-      text : `x=${p}`
     })
   }
 
@@ -239,6 +254,15 @@ class App {
     });
   }
 
+  makeLabelTextApex() {
+    const { p, q } = this;
+
+    return new LabelText("apex", {
+      title: "頂点",
+      text : `(${p}, ${q})`
+    })
+  }
+
   //---------------------------------------------------------------------------
   // Events
   //---------------------------------------------------------------------------
@@ -249,12 +273,24 @@ class App {
   //---------------------------------------------------------------------------
   // update Shapes
   //---------------------------------------------------------------------------
+  makeShapes() {
+    this.shapes.lineMain  = sShape.solidLine();
+    this.shapes.lineAxis  = sShape.brokenLine(1);
+    this.shapes.dotApex   = sShape.dot1("#f00");
+    this.shapes.dotPass1  = sShape.dot1("#00f");
+    this.shapes.dotPass2  = sShape.dot1("#00f");
+    this.shapes.textApex  = sShape.text();
+    this.shapes.textPass1 = sShape.text();
+    this.shapes.textPass2 = sShape.text();
+    this.graph.add(this.shapes);
+  }
+  
   // 主線
   updateShapeLineMain() {
     const shapes = this.shapes;
     const p = [];
 
-    if (this.a != Infinity)
+    if (!this.isInvalid)
     {
       // 左端から右端に向かって0.1刻みで座標のリストを生成
       for(let x = c.l; x <= c.r; x+=0.1) {
@@ -266,79 +302,118 @@ class App {
     shapes.lineMain.setAttrs({points: points(p)});
   }
 
-  updateShapeDotApex() {
-    const { dotApex } = this.shapes;
-    const {p,q} = this.data;
-    dotApex.setAttrs(xy(p, q))
+  updateShapeLineAxis() {
+    const { lineAxis } = this.shapes;
+    const { axisX } = this.data;
+
+    lineAxis.setAttrs({
+      points: points([axisX, c.d, axisX, c.t])
+    })
+    
   }
 
-  updateShapeDotPass() {
-    const { dotPass } = this.shapes;
-    const { x, y } = this.data;
-    dotPass.setAttrs(xy(x, y));
+  updateShapeDotApex() {
+    const { dotApex } = this.shapes;
+    const { a, p, q } = this;
+
+    if (this.isInvalid) {
+      dotApex.setAttr("visible", false);
+    } else {
+      dotApex.setAttr("visible", true);
+      dotApex.setAttrs(xy(p, q))
+    }
+  }
+
+  updateShapeDotPass1() {
+    const { dotPass1 } = this.shapes;
+    const { x1, y1 } = this.data;
+    dotPass1.setAttrs(xy(x1, y1));
+  }
+
+  updateShapeDotPass2() {
+    const { dotPass2 } = this.shapes;
+    const { x2, y2 } = this.data;
+    dotPass2.setAttrs(xy(x2, y2));
   }
 
   updateShapeTextApex() {
     const { textApex } = this.shapes;
-    const { a } = this;
-    const { p, q } = this.data;
+    const { a, p, q } = this;
 
-    const isToUp = (a != Infinity && 0 < a);
+    const isToUp = (!this.isInvalid && 0 < a);
 
-    textApex.setAttrs(xy(p, (isToUp)? q - 0.3:q + 1));
-    textApex.setAttr("text", `(${p.toFixed(1)}, ${q.toFixed(1)})`);
+    if (this.isInvalid) { 
+      textApex.setAttr("visible", false);
+    } else {
+      textApex.setAttr("visible", true);
+      textApex.setAttrs(xy(p, (isToUp)? q - 0.3:q + 1));
+      textApex.setAttr("text", `(${p.toFixed(1)}, ${q.toFixed(1)})`);
+    }
   }
 
-  updateShapeTextPass() {
-    const { textPass } = this.shapes;
+  updateShapeTextPass1() {
+    const { textPass1 } = this.shapes;
     const { a } = this;
-    const { x, y } = this.data;
+    const { x1, y1 } = this.data;
 
-    const isToUp = (a != Infinity && 0 < a);
+    const isToUp = (!this.isInvalid && 0 < a);
 
-    textPass.setAttrs(xy(x, (isToUp)? y - 0.3:y + 1));
-    textPass.setAttr("text", `(${x.toFixed(1)}, ${y.toFixed(1)})`);
+    textPass1.setAttrs(xy(x1, (isToUp)? y1 - 0.3:y1 + 1));
+    textPass1.setAttr("text", `(${x1.toFixed(1)}, ${y1.toFixed(1)})`);
+  }
+
+  updateShapeTextPass2() {
+    const { textPass2 } = this.shapes;
+    const { a } = this;
+    const { x2, y2 } = this.data;
+
+    const isToUp = (!this.isInvalid && 0 < a);
+
+    textPass2.setAttrs(xy(x2, (isToUp)? y2 - 0.3:y2 + 1));
+    textPass2.setAttr("text", `(${x2.toFixed(1)}, ${y2.toFixed(1)})`);
   }
   //---------------------------------------------------------------------------
   // Draw
   //---------------------------------------------------------------------------
   drawMath() {
     const { math1, math2 } = this.dom;
-    const { p, q, x, y } = this.data;
-    const { a } = this;
+    const { axisX, x1, y1, x2, y2 } = this.data;
+    const { a, p, q } = this;
 
-    MyMathJax.preview(math1, `$$(${p}, ${q})$$`);
-    MyMathJax.preview(math2, `$$(${x}, ${y})$$`);
+    MyMathJax.preview(math1, `$$x=${axisX}$$`);
+    MyMathJax.preview(math2, `$$(${x1}, ${y1}), (${x2}, ${y2})$$`);
 
-    if (a == Infinity) {
+    if (this.isInvalid) {
       MyMathJax.preview(math3, "none");
     } else {
-      MyMathJax.preview(math3, `$$y=${a.toFixed(2)}(x${Util.signed(p)})^2${Util.signed(q)}$$`)
+      MyMathJax.preview(math3, `$$y=${a.toFixed(2)}(x${Util.signed(p)})^2${Util.signed(q.toFixed(2))}$$`)
     }
   }
 
   drawGraph() {
     this.updateShapeLineMain();
+    this.updateShapeLineAxis();
     this.updateShapeDotApex();
-    this.updateShapeDotPass();
+    this.updateShapeDotPass1();
+    this.updateShapeDotPass2();
     this.updateShapeTextApex();
-    this.updateShapeTextPass();
+    this.updateShapeTextPass1();
+    this.updateShapeTextPass2();
     this.graph.draw();
   }
 
   drawInspector() {
-    const { explain, axis, slope } = this.dom.text;
-    const { a } = this;
-    const { p, q } = this.data;
+    const { explain, apex, slope } = this.dom.text;
+    const { a, p, q, isInvalid } = this;
 
-    // 軸
-    axis.text = `x=${p.toFixed(1)}`;
+    // 頂点
+    apex.text = (isInvalid)? "なし" : `(${p}, ${q})`;
 
     // 傾き
-    slope.text = (a == Infinity)? "なし":a.toFixed(1);
+    slope.text = (isInvalid)? "なし":a.toFixed(2);
 
     // 解説
-    if (a == Infinity) {
+    if (isInvalid) {
       explain.innerText = "存在しない";
     } else if (a == 0) {
       explain.innerText = "水平線";

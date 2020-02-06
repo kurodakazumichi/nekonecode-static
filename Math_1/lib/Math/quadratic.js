@@ -92,6 +92,34 @@ class Quadratic
   }
 
   //---------------------------------------------------------------------------
+  // 定義域
+  //---------------------------------------------------------------------------
+  /** 定義域(min) */
+  setDomainMin(v) {
+    const { min, max } = this.domain;
+
+    if(!max.isUndefined) {
+      min.value = Math.min(Number(v), max.value);
+    } else {
+      min.value = v;
+    }
+    return min.value;
+  }
+
+  /** 定義域(max) */
+  setDomainMax(v) {
+    const { min, max } = this.domain;
+
+    if(!min.isUndefined) {
+      max.value = Math.max(Number(v), min.value);
+    } else {
+      max.value = v;
+    }
+
+    return max.value;
+  }
+
+  //---------------------------------------------------------------------------
   // 初期化
   //---------------------------------------------------------------------------
   /**

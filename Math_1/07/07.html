@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>数学1 関数のグラフ ２次関数</title>
+  <meta charset="utf-8">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+  <script src="../../vender/js/konva@3.1.0.js"></script>
+  <script src="../lib/base.js"></script>
+  <script src="../lib/myMathJax.js"></script>
+  <script src="../lib/myKonva.js"></script>
+  <script src="../lib/ui.js"></script>
+  <script src="../lib/Math/quadratic.js"></script>
+  <link rel="stylesheet" type="text/css" href="../css/graph.css">
+  <style>
+  .inputSlider label, .labelText label {
+    width:3.5em;
+  }
+  </style>
+</head>
+
+<body>
+  
+  <header>
+    <h1>２次関数 定義域</h1>
+    <div class="math">$$y=a(x - p)^2 + q$$</div>：
+    <div id="math" class="math"></div>
+  </header>
+  <div class="wrapper">
+    <div id="container"></div>
+    <div id="inspector">
+      <ul>
+        <li id="a"></li>
+        <li id="p"></li>
+        <li id="q"></li>
+        <li id="min"></li>
+        <li id="max"></li>
+        <li id="explain"></li>
+      </ul>
+    </div>
+  </div>
+
+<script>
+
+//-----------------------------------------------------------------------------
+// アプリケーション
+class App extends AppBase{
+  constructor() {
+    super();
+  }
+
+  // 方程式
+  fx(x) {
+    return this.quad.fx(x);
+  }
+
+  beforeProc() {
+    // 二次関数
+    this.quad = new Quadratic();
+    this.quad.initAPQ(0.5, 3, 3);
+    this.quad.domain.min.grEq = -1;
+    this.quad.domain.max.leEq = 1;
+  }
+
+  initData() {
+    return  {
+      x:-1,
+    }
+  }
+
+  //---------------------------------------------------------------------------
+  // dom making
+  //---------------------------------------------------------------------------
+  makeDom() {
+    return {
+      math: Util.id("math"),
+      input: {
+        a: this.makeSliderA(),
+        p: this.makeSliderP(),
+        q: this.makeSliderQ(),
+        min: this.makeSliderMin(),
+        max: this.makeSliderMax(),
+      },
+      text: {
+        explain: Util.id("explain"),
+      }
+    }
+  }
+  makeSliderA() {
+    const {a} = this.quad;
+
+    return new InputSlider("a", {
+      title:"a",
+      value:a,
+      min:-3,
+      max:3,
+
+      step:0.01,
+      onInput: (e) => {
+
+        this.quad.a = e.target.value;
+        this.drawGraph();
+        this.drawInspector();
+      },
+      onChange: this.onChange.bind(this),
+    })
+  }
+
+  makeSliderP() {
+    const {p} = this.quad;
+
+    return new InputSlider("p", {
+      title:"p",
+      value:p,
+      min: c.l,
+      max: c.r,
+      onInput: (e) => {
+        this.quad.p = e.target.value;
+        this.drawGraph();
+        this.drawInspector();
+      },
+      onChange: this.onChange.bind(this),
+    })
+  }
+
+  makeSliderQ() {
+    const {q} = this.quad;
+
+    return new InputSlider("q", {
+      title:"q",
+      value:q,
+      min:c.d,
+      max:c.t,
+      onInput: (e) => {
+        this.quad.q = e.target.value;
+        this.drawGraph();
+        this.drawInspector();
+      },
+      onChange: this.onChange.bind(this),
+    })
+  }
+
+  makeSliderMin() {
+    const { value } = this.quad.domain.min;
+
+    return new InputSlider("min", {
+      title: "minX",
+      value: value,
+      min: c.l,
+      max: c.r,
+      onInput: (e) => {
+        const { value } = e.target;
+        e.target.value = this.quad.setDomainMin(value);
+
+        this.drawGraph();
+        this.drawInspector();
+      },
+    })
+  }
+
+  makeSliderMax() {
+    const { value } = this.quad.domain.max;
+
+    return new InputSlider("max", {
+      title: "maxX",
+      value: value,
+      min: c.l,
+      max: c.r,
+      onInput: (e) => {
+        const { value } = e.target;
+        e.target.value = this.quad.setDomainMax(value);
+
+        this.drawGraph();
+        this.drawInspector();
+      },
+    })
+  }
+
+  //---------------------------------------------------------------------------
+  // Events
+  //---------------------------------------------------------------------------
+  onChange(e) {
+    this.drawMath();
+  }
+
+  //---------------------------------------------------------------------------
+  // update Shapes
+  //---------------------------------------------------------------------------
+  makeShapes() {
+    return {
+      lineMain  : sShape.solidLine(),    // ２次関数
+      dotApex   : sShape.dot("#f00"),    // 頂点
+      textApex  : sShape.text(),         // 頂点座標
+      lineDomain: sShape.solidLine(),
+      dotMin    : sShape.dot("#00f"),
+      dotMax    : sShape.dot("#00f"),
+      dotMinX   : sShape.dot("#00f"),    // 定義域min
+      textMinX  : sShape.text(),         // 定義域min X座標
+      textMinY  : sShape.text(),         // 定義域min Y座標　
+      dotMaxX   : sShape.dot("#00f"),    // 定義域max
+      textMaxX  : sShape.text(),         // 定義域man X座標
+      textMaxY  : sShape.text(),         // 定義域man Y座標　
+      lineMin   : sShape.brokenLine(1),  // 定義域minのライン
+      lineMax   : sShape.brokenLine(1),  // 定義域manのライン
+    }
+  }
+
+  // 主線
+  updateShapeLineMain() {
+    const shapes = this.shapes;
+    const p = [];
+
+    // 左端から右端に向かって0.1刻みで座標のリストを生成
+    for(let x = c.l; x <= c.r; x+=0.1) {
+      p.push(x);
+      p.push(this.fx(x));
+    }
+
+    shapes.lineMain.points(p);
+  }
+  /** 頂点関連 */
+  updateShapeDotApex() {
+    this.shapes.dotApex.xy(this.quad.p, this.quad.q);
+  }
+  updateShapeTextApex() {
+    this.shapes.textApex
+      .x(this.quad.p)
+      .y(this.quad.q)
+      .text(this.quad.toApexString());
+  }
+
+  /** 定義域 min 関連 */
+  updateDotMinX() {
+    this.shapes.dotMinX.x(this.quad.domain.min.value).y(0);
+  }
+  updateTextMinX() {
+    const { value } = this.quad.domain.min;
+    this.shapes.textMinX.x(value).y(-0.4).text(value)
+  }
+  updateTextMinY() {
+    const value = this.fx(this.quad.domain.min.value);
+    this.shapes.textMinY.x(0.4).y(value).text(value.toFixed(1));
+  }
+  updateLineMin() {
+    const x = this.quad.domain.min.value;
+    const y = this.fx(x);
+    this.shapes.lineMin.points([x, 0, x, y, 0, y]);
+  }
+
+  /** 定義域 max 関連 */
+  updateDotMaxX() {
+    this.shapes.dotMaxX.x(this.quad.domain.max.value).y(0);
+  }
+  updateTextMaxX() {
+    const { value } = this.quad.domain.max;
+    this.shapes.textMaxX.x(value).y(-0.4).text(value)
+  }
+  updateTextMaxY() {
+    const value = this.fx(this.quad.domain.max.value);
+    this.shapes.textMaxY.x(0.4).y(value).text(value.toFixed(1));
+  }
+  updateLineMax() {
+    const x = this.quad.domain.max.value;
+    const y = this.fx(x);
+    this.shapes.lineMax.points([x, 0, x, y, 0, y]);
+  }
+
+  updateDotMin() {
+    this.shapes.dotMin
+      .x(this.quad.domain.min.value)
+      .y(this.fx(this.quad.domain.min.value));
+  }
+  updateDotMax() {
+    this.shapes.dotMax
+      .x(this.quad.domain.max.value)
+      .y(this.fx(this.quad.domain.max.value));
+  }
+  updateLineDomain() {
+    const { min, max } = this.quad.domain;
+    this.shapes.lineDomain
+      .stroke("#f00")
+      .points([min.value, 0, max.value, 0]);
+  }
+  //---------------------------------------------------------------------------
+  // Draw
+  //---------------------------------------------------------------------------
+  drawMath() {
+    const { math } = this.dom;
+    MyMathJax.preview(math, this.quad.toLatexStringAPQ());
+  }
+
+  drawGraph() {
+    this.updateShapeLineMain();
+    this.updateShapeDotApex();
+    this.updateShapeTextApex();
+
+    this.updateDotMinX();
+    this.updateTextMinX();
+    this.updateTextMinY();
+    this.updateLineMin();
+
+    this.updateDotMaxX();
+    this.updateTextMaxX();
+    this.updateTextMaxY();
+    this.updateLineMax();
+
+    this.updateDotMin();
+    this.updateDotMax();
+    this.updateLineDomain();
+    this.graph.draw();
+  }
+
+  drawInspector() {
+    const { explain } = this.dom.text;
+    explain.innerText = this.quad.toString();
+  }
+}
+
+const app = new App();
+app.draw();
+
+</script> 
+</body>
+</html>

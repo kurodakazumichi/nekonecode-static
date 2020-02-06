@@ -12,9 +12,12 @@ class DomainOfDefinition {
   }
 
   constructor() {
-    this.value = 0;
+    this._value = 0;
     this.type  = undefined;
   }
+
+  get value() { return this._value; }
+  set value(v) { this._value = Number(v); }
 
   set gr(v) {
     this.value = v;
@@ -33,8 +36,7 @@ class DomainOfDefinition {
     this.type = this.types.LeEq;
   }
 
-  reset() {
-    this.value = 0;
+  undefined() {
     this.type = undefined;
   }
 
@@ -112,4 +114,57 @@ class Util {
 }
 
 
+/******************************************************************************
+ * Application Base
+ *****************************************************************************/
+class AppBase {
+  constructor() {
+    this.beforeProc();
+    this.initConfig();
+    this.data = this.initData();
+    this.graph = this.initGraph();
+    this.shapes = this.makeShapes();
+    this.graph.add(this.shapes);
+    this.dom = this.makeDom();
+  }
 
+  /** 派生先で実装 */
+  beforeProc() {}
+
+  /** 設定の初期化 */
+  initConfig() {
+    c.setUnit(20);
+  }
+
+  /** 派生先で実装 */
+  initData() { return {}; }
+
+  /** グラフの初期化 */
+  initGraph() {
+    const graph = new Graph("container");
+    graph.axisX().axisY();
+    return graph;
+  }
+
+  /** 派生先で実装 */
+  makeShapes() { return {}; }
+
+  /** 派生先で実装 */
+  makeDom(){ return {}; }
+
+  /** 派生先で実装 */
+  drawMath(){}
+
+  /** 派生先で実装 */
+  drawGraph(){}
+
+  /** 派生先で実装 */
+  drawInspector(){}
+
+  /** 描画 */
+  draw() {
+    this.drawMath();
+    this.drawGraph();
+    this.drawInspector();
+  }
+}

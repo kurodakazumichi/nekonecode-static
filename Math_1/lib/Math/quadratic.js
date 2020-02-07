@@ -23,7 +23,10 @@ class Quadratic
   //---------------------------------------------------------------------------
   /** aの操作 */
   get a() { return this._a; }
-  set a(v) { this._a = Number(v); }
+  set a(v) { 
+    this._a = Number(v);
+    this.initAPQ(this._a, this._p, this._q);
+  }
 
   /** bの操作 */
   get b() { return this._b; }
@@ -45,14 +48,14 @@ class Quadratic
   set p(v) {
     this._p = Number(v);
     this._b = this.calcB_By_ap(this.a, this.p);
-    this._c = this.calcC_By_pq(this.p, this.q);
+    this._c = this.calcC_By_pq(this.a, this.p, this.q);
   }
 
   /** ｑの操作 */
   get q() { return this._q; }
   set q(v) {
     this._q = Number(v);
-    this._c = this.calcC_By_pq(this.p, this.q);
+    this._c = this.calcC_By_pq(this.a, this.p, this.q);
   }
 
   /** 頂点 */
@@ -140,7 +143,7 @@ class Quadratic
   initAPQ(a, p, q) {
     this._a = a, this._p = p, this._q = q;
     this._b = this.calcB_By_ap(a, p);
-    this._c = this.calcC_By_pq(p, q);
+    this._c = this.calcC_By_pq(a, p, q);
   }
 
   /**
@@ -190,9 +193,9 @@ class Quadratic
     return -2 * a * p;
   }
 
-  /** p, q要素からcを求める */
-  calcC_By_pq(p, q) {
-    return p**2 + q;
+  /** a, p, q要素からcを求める */
+  calcC_By_pq(a, p, q) {
+    return a * p**2 + q;
   }
 
   /** 頂点pqと通過する１点xyから傾きを計算する */
@@ -238,8 +241,6 @@ class Quadratic
     const c = y1 + (-a*(x1*x1) - b*x1);
     return c;
   }
-
-
 
   /** xからyを求める */
   fx(x) {

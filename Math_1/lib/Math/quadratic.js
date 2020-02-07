@@ -94,6 +94,35 @@ class Quadratic
     return this.apex.y;
   }
 
+  /** 判別式(b^2 - 4ac) */
+  get discriminant() {
+    const { a, b, c } = this;
+    return (b**2) - (4*a*c);
+  }
+
+  /** 解(解の公式から求める) */
+  get solution() {
+    const { a, b } = this;
+    const d = this.discriminant;
+
+    // a が 0の場合は定義なし
+    if (a === 0) return undefined;
+
+    // D < 0の時、解はない
+    if (d < 0) return [];
+
+    // 解を求める
+    const deno = 2 * a;
+    const x1 = (-b - Math.sqrt(d)) / deno;
+    const x2 = (-b + Math.sqrt(d)) / deno;
+
+    // D = 0の時、重解になる
+    if (d === 0) return [x1];
+
+    // D > 0の時、異なる２点を共有する
+    return [Math.min(x1, x2), Math.max(x1, x2)];
+  }
+
   //---------------------------------------------------------------------------
   // 定義域
   //---------------------------------------------------------------------------

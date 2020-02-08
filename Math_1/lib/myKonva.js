@@ -42,6 +42,17 @@ const points = (list) => {
     return (i%2 == 0)? x(p) : y(p);
   })
 }
+const invX = (x) => {
+  return (x - c.hw) / c.u;
+}
+const invY = (y) => {
+  return -((y - c.hh) / c.u);
+}
+const getLocalXY = (e) => {
+  const x = e.target.x();
+  const y = e.target.y();
+  return {x:invX(x), y:invY(y)};
+}
 
 /******************************************************************************
  * 形状
@@ -90,6 +101,18 @@ class Shape {
   }
   visible(flg) {
     this.node.setAttr("visible", flg); return this;
+  }
+  draggable(flg = true) {
+    this.node.setAttr("draggable", flg); return this;
+  }
+
+  onMouseMove(cb) {
+    this.node.on('mousemove', cb);
+    return this;
+  }
+  onDragMove(cb) {
+    this.node.on('dragmove', cb);
+    return this;
   }
 }
 

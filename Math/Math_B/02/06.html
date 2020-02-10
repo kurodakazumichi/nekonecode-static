@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>数学B ベクトル</title>
+  <meta charset="utf-8">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+  <script src="../../../vender/js/konva@3.1.0.js"></script>
+  <script src="../../lib/base.js"></script>
+  <script src="../../lib/myMathJax.js"></script>
+  <script src="../../lib/myKonva.js"></script>
+  <script src="../../lib/ui.js"></script>
+  <script src="../../lib/myMath.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../css/graph.css">
+  <style>
+  .inputSlider label, .labelText label {
+    width:3.5em;
+  }
+  </style>
+</head>
+
+<body>
+  
+  <header>
+    <h1>ベクトルAに対するベクトルBのy成分(外積)</h1>
+  </header>
+  <div class="wrapper">
+    <div id="container"></div>
+    <div id="inspector">
+      <ul>
+        <li id="explain"></li>
+      </ul>
+    </div>
+  </div>
+
+<script>
+
+//-----------------------------------------------------------------------------
+// アプリケーション
+class App extends AppBase{
+  constructor() {
+    super();
+  }
+
+  beforeProc() {
+    // ベクトル
+    this.a = MyMath.Vector2.right.times(3);
+    this.b = MyMath.Vector2.one.times(3);
+  }
+
+  /** 設定の初期化 */
+  initConfig() {
+    c.setUnit(50);
+  }
+  
+  initData() {
+    return  {}
+  }
+  //---------------------------------------------------------------------------
+  // dom making
+  //---------------------------------------------------------------------------
+  makeDom() {
+    return {
+      text: {
+        explain: Util.id("explain"),
+      }
+    }
+  }
+
+  //---------------------------------------------------------------------------
+  // update Shapes
+  //---------------------------------------------------------------------------
+  makeShapes() {
+    return {
+      l1   : sShape.brokenLine(1),
+      l2   : sShape.brokenLine(1),
+      va   : sShape.arrow(3),
+      vb   : sShape.arrow(3),
+      pa   : this.makePA(),
+      pb   : this.makePB(),
+      dp   : sShape.dot("green").radius(10),
+      ta   : sShape.text("A").fontSize(30),
+      tb   : sShape.text("B").fontSize(30),
+      td   : sShape.text().fontSize(30),
+    }
+  }
+
+  makePA() {
+    return sShape.dot("#f00")
+      .xy(this.a.x, this.a.y)
+      .radius(6)
+      .draggable()
+      .onDragMove((e) => {
+        const pos = getLocalXY(e);
+        this.a.x = pos.x;
+        this.a.y = pos.y;
+        this.drawGraph();
+      });
+  }
+
+  makePB() {
+    return sShape.dot("#f00")
+      .xy(this.b.x, this.b.y)
+      .radius(6)
+      .draggable()
+      .onDragMove((e) => {
+        const pos = getLocalXY(e);
+        this.b.x = pos.x;
+        this.b.y = pos.y;
+        this.drawGraph();
+      })
+  }
+
+  updatePoint() {
+    this.shapes.pa.xy(this.a.x, this.a.y);
+    this.shapes.pb.xy(this.b.x, this.b.y);
+  }
+
+  updateVector() {
+    this.shapes.va.points([0, 0, this.a.x, this.a.y]);
+    this.shapes.vb.points([0, 0, this.b.x, this.b.y]);
+  }
+
+  updateLine() {
+    if (this.a.y == 0) return;
+    const slope = -this.a.x/this.a.y;
+    this.shapes.l1.points([c.l, slope*c.l, c.r, slope*c.r]);
+  }
+
+  updateDp() {
+    const cross = MyMath.Vector2.cross(this.a.normalize, this.b);
+    const c = new MyMath.Vector2(-this.a.y, this.a.x).normalize.times(cross);
+
+    this.shapes.dp
+      .xy(c.x, c.y);
+
+    this.shapes.td.xy(c.x, c.y).text(cross.toFixed(2));
+
+    this.shapes.l2.points([c.x, c.y, this.b.x, this.b.y]);
+  }
+
+
+  updateText() {
+    const a = this.a.normalize.times(this.a.magnitude + 1);
+    const b = this.b.normalize.times(this.b.magnitude + 1);
+    this.shapes.ta.xy(a.x, a.y);
+    this.shapes.tb.xy(b.x, b.y);
+  }
+
+  //---------------------------------------------------------------------------
+  // Draw
+  //---------------------------------------------------------------------------
+  drawGraph() {
+    this.updateVector();
+    this.updatePoint();
+    this.updateDp();
+    this.updateLine();
+    this.updateText();
+    this.graph.draw();
+  }
+
+  drawInspector() {
+    const { explain } = this.dom.text;
+    explain.innerText = `赤丸をドラッグするとベクトルを動かせる。`
+  }
+}
+
+const app = new App();
+app.draw();
+
+</script> 
+</body>
+</html>

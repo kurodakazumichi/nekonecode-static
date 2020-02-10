@@ -126,6 +126,10 @@ class Shape {
     this.node.on('dragmove', cb);
     return this;
   }
+  onClick(cb) {
+    this.node.on('click', cb);
+    return this;
+  }
 }
 
 /** Line */

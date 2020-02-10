@@ -119,19 +119,6 @@ class App extends AppBase{
       .fontSize(20)
   }
 
-  updateIntersection() {
-    const intersection = MyMath.Quadratic.intersect(this.quad1, this.quad2);
-
-    const dots = [this.shapes.point1, this.shapes.point2];
-
-    dots.map((dot) => { dot.visible(false); })
-
-    for(let i = 0; i < intersection.count; i++) {
-      dots[i].visible(true);
-      dots[i].xy(intersection.points[i*2], intersection.points[i*2+1]);
-    }
-  }
-
   //---------------------------------------------------------------------------
   // Draw
   //---------------------------------------------------------------------------

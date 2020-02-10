@@ -82,6 +82,7 @@ class App extends AppBase{
       xy       : sShape.text(),
       magnitude: sShape.text(),
       pointer  : this.makePointer(),
+      normalize: this.makeNormalizeText(),
     }
   }
 
@@ -108,7 +109,7 @@ class App extends AppBase{
     const v = this.v.clone().normalize.times(m + 0.8);
     this.shapes.xy
       .xy(v.x - 0.8, v.y)
-      .text(this.v.toString())
+      .text(`(${this.v.x.toFixed(2)}, ${this.v.y.toFixed(2)})`)
       .fontSize(20)
   }
 
@@ -117,6 +118,18 @@ class App extends AppBase{
       .xy(0.1, -0.1)
       .text(`大きさ：${this.v.magnitude}`)
       .fontSize(20)
+  }
+
+  makeNormalizeText() {
+    return sShape
+      .text("クリックすると正規化されるよ！")
+      .fontSize(20)
+      .xy(c.l + 1, c.t - 1)
+      .onClick((e) => {
+        this.v = this.v.normalize;
+        this.shapes.pointer.xy(this.v.x, this.v.y);
+        this.drawGraph();
+      });
   }
 
   //---------------------------------------------------------------------------

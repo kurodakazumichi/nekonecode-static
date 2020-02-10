@@ -42,28 +42,18 @@ class App extends AppBase{
     super();
   }
 
-  // 方程式
-  fx(x) {
-    return this.quad.fx(x);
-  }
-
   beforeProc() {
     // 二次関数
-    this.quad1 = new MyMath.Quadratic();
-    this.quad2 = new MyMath.Quadratic();
+    this.v = new MyMath.Vector2(1, 1);
+  }
+
+  /** 設定の初期化 */
+  initConfig() {
+    c.setUnit(50);
   }
   
   initData() {
-    return  {
-      ax1:0,
-      ay1:1,
-      ax2:1,
-      ay2:2,
-      bx1:0,
-      by1:0,
-      bx2:-1,
-      by2:-1,
-    }
+    return  {}
   }
   //---------------------------------------------------------------------------
   // dom making
@@ -88,88 +78,45 @@ class App extends AppBase{
   //---------------------------------------------------------------------------
   makeShapes() {
     return {
-      quad1     : sShape.solidLine(),  // ２次関数A
-      apex1     : this.makeApex1(),    // 式Aの頂点
-      pass1     : this.makePass1(),    // 式Aの通過点
-      quad2     : sShape.solidLine(),  // ２次関数B
-      apex2     : this.makeApex2(),    // 式Bの頂点
-      pass2     : this.makePass2(),    // 式Bの通過点
-      point1    : sShape.dot("#f00").radius(6),    // 交点１
-      point2    : sShape.dot("#f00").radius(6),    // 交点２
-      vector    : sShape.arrow().points([0, 0, 1, 1]),
+      vector   : sShape.arrow().points([0, 0, 1, 1]),
+      xy       : sShape.text(),
+      magnitude: sShape.text(),
+      pointer  : this.makePointer(),
     }
   }
 
-  makeApex1() {
-    return sShape.dot("#00f")
-      .xy(this.data.ax1, this.data.ay1)
+  makePointer() {
+    return sShape.dot("#f00")
+      .xy(this.v.x, this.v.y)
       .draggable()
       .onDragMove((e) => {
         const pos = getLocalXY(e);
-        this.data.ax1 = pos.x;
-        this.data.ay1 = pos.y;
+        this.v.x = pos.x;
+        this.v.y = pos.y;
         this.drawGraph();
       });
   }
 
-  makePass1() {
-    return sShape.dot("#00f")
-      .xy(this.data.ax2, this.data.ay2)
-      .draggable()
-      .onDragMove((e) => {
-        const pos = getLocalXY(e);
-        this.data.ax2 = pos.x;
-        this.data.ay2 = pos.y;
-        this.drawGraph();
-      });
+  updateVector() {
+    this.shapes.vector.points([
+      0, 0, this.v.x, this.v.y
+    ]);
   }
 
-  makeApex2() {
-    return sShape.dot("#00f")
-      .xy(this.data.bx1, this.data.by1)
-      .draggable()
-      .onDragMove((e) => {
-        const pos = getLocalXY(e);
-        this.data.bx1 = pos.x;
-        this.data.by1 = pos.y;
-        this.drawGraph();
-      });
+  updateXY() {
+    const m = this.v.magnitude;
+    const v = this.v.clone().normalize.times(m + 0.8);
+    this.shapes.xy
+      .xy(v.x - 0.8, v.y)
+      .text(this.v.toString())
+      .fontSize(20)
   }
 
-  makePass2() {
-    return sShape.dot("#00f")
-      .xy(this.data.bx2, this.data.by2)
-      .draggable()
-      .onDragMove((e) => {
-        const pos = getLocalXY(e);
-        this.data.bx2 = pos.x;
-        this.data.by2 = pos.y;
-        this.drawGraph();
-      });
-  }
-
-  updateQuad1() {
-    const { ax1, ay1, ax2, ay2 } = this.data;
-    this.quad1.initByApexAndPassPoint(ax1, ay1, ax2, ay2);
-
-    this.shapes.quad1
-      .points(this.getQuadPoints(this.quad1));
-  }
-
-  updateQuad2() {
-    const { bx1, by1, bx2, by2 } = this.data;
-    this.quad2.initByApexAndPassPoint(bx1, by1, bx2, by2);
-
-    this.shapes.quad2
-      .points(this.getQuadPoints(this.quad2));
-  }
-
-  getQuadPoints(quad) {
-    const p = [];
-    for (let x = c.l; x <= c.r; x += 0.1) {
-      p.push(x, quad.fx(x));
-    }
-    return p;
+  updateMagnitude() {
+    this.shapes.magnitude
+      .xy(0.1, -0.1)
+      .text(`大きさ：${this.v.magnitude}`)
+      .fontSize(20)
   }
 
   updateIntersection() {
@@ -188,19 +135,16 @@ class App extends AppBase{
   //---------------------------------------------------------------------------
   // Draw
   //---------------------------------------------------------------------------
-  drawMath() {
-  }
-
   drawGraph() {
-    this.updateQuad1();
-    this.updateQuad2();
-    this.updateIntersection();
+    this.updateVector()
+    this.updateXY();
+    this.updateMagnitude();
     this.graph.draw();
   }
 
   drawInspector() {
     const { explain } = this.dom.text;
-    explain.innerText = `青丸はドラッグ可能、交点に赤丸が表示される。`
+    explain.innerText = `赤丸をドラッグするとベクトルを動かせる。`
   }
 }
 

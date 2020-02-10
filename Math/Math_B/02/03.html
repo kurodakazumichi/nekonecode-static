@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>数学B ベクトル</title>
+  <meta charset="utf-8">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+  <script src="../../../vender/js/konva@3.1.0.js"></script>
+  <script src="../../lib/base.js"></script>
+  <script src="../../lib/myMathJax.js"></script>
+  <script src="../../lib/myKonva.js"></script>
+  <script src="../../lib/ui.js"></script>
+  <script src="../../lib/myMath.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../css/graph.css">
+  <style>
+  .inputSlider label, .labelText label {
+    width:3.5em;
+  }
+  </style>
+</head>
+
+<body>
+  
+  <header>
+    <h1>ベクトルの減法</h1>
+    <div>$$\vec{a} - \vec{b} = \vec{c}$$</div>
+  </header>
+  <div class="wrapper">
+    <div id="container"></div>
+    <div id="inspector">
+      <ul>
+        <li id="explain"></li>
+      </ul>
+    </div>
+  </div>
+
+<script>
+
+//-----------------------------------------------------------------------------
+// アプリケーション
+class App extends AppBase{
+  constructor() {
+    super();
+  }
+
+  beforeProc() {
+    // ベクトル
+    this.a = MyMath.Vector2.one;
+    this.b = MyMath.Vector2.left;
+    this.c = MyMath.Vector2.add(this.a, this.b);
+  }
+
+  /** 設定の初期化 */
+  initConfig() {
+    c.setUnit(50);
+  }
+  
+  initData() {
+    return  {}
+  }
+  //---------------------------------------------------------------------------
+  // dom making
+  //---------------------------------------------------------------------------
+  makeDom() {
+    return {
+      text: {
+        explain: Util.id("explain"),
+      }
+    }
+  }
+
+  //---------------------------------------------------------------------------
+  // update Shapes
+  //---------------------------------------------------------------------------
+  makeShapes() {
+    return {
+      ln  : sShape.brokenLine(1),
+      va  : sShape.arrow(1),
+      vb  : sShape.arrow(1),
+      vb2 : sShape.arrow(1, "gray").dash([5]),
+      vc  : sShape.arrow(2, "red"),
+      vc2 : sShape.arrow(1, "red").dash([5]),
+      pa  : this.makePA(),
+      pb  : this.makePB(),
+      ta  : sShape.text("a").fontSize(20),
+      tb  : sShape.text("b").fontSize(20),
+      tb2 : sShape.text("-b").fontSize(20),
+      tc  : sShape.text("c").fontSize(20),
+    }
+  }
+
+  makePA() {
+    return sShape.dot("#f00")
+      .xy(this.a.x, this.a.y)
+      .radius(6)
+      .draggable()
+      .onDragMove((e) => {
+        const pos = getLocalXY(e);
+        this.a.x = pos.x;
+        this.a.y = pos.y;
+        this.drawGraph();
+      });
+  }
+
+  makePB() {
+    return sShape.dot("#f00")
+      .xy(this.b.x, this.b.y)
+      .radius(6)
+      .draggable()
+      .onDragMove((e) => {
+        const pos = getLocalXY(e);
+        this.b.x = pos.x;
+        this.b.y = pos.y;
+        this.drawGraph();
+      })
+  }
+
+  updateLine() {
+    const { a, b, c } = this;
+
+    this.shapes.ln
+      .points([a.x, a.y, c.x, c.y, -b.x, -b.y]);
+  }
+
+  updatePoint() {
+    this.shapes.pa.xy(this.a.x, this.a.y);
+    this.shapes.pb.xy(this.b.x, this.b.y);
+  }
+
+  updateVector() {
+    this.shapes.va.points([0, 0, this.a.x, this.a.y]);
+    this.shapes.vb.points([0, 0, this.b.x, this.b.y]);
+    this.shapes.vb2.points([0, 0, -this.b.x, -this.b.y])
+    this.shapes.vc.points([0, 0, this.c.x, this.c.y]);
+  }
+
+  updateText() {
+    const a = MyMath.Vector2.times(this.a, 0.5);
+    const b = MyMath.Vector2.times(this.b, 0.5);
+    const c = MyMath.Vector2.times(this.c, 0.5);
+    this.shapes.ta.xy(a.x, a.y);
+    this.shapes.tb.xy(b.x, b.y);
+    this.shapes.tb2.xy(-b.x, -b.y)
+    this.shapes.tc.xy(c.x, c.y);
+  }
+
+  //---------------------------------------------------------------------------
+  // Draw
+  //---------------------------------------------------------------------------
+  drawGraph() {
+    this.c = MyMath.Vector2.sub(this.a, this.b);
+    this.updateVector();
+    this.updatePoint();
+    this.updateLine();
+    this.updateText();
+    this.graph.draw();
+  }
+
+  drawInspector() {
+    const { explain } = this.dom.text;
+    explain.innerText = `赤丸をドラッグするとベクトルを動かせる。`
+  }
+}
+
+const app = new App();
+app.draw();
+
+</script> 
+</body>
+</html>

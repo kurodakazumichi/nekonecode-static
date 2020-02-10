@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>数学B ベクトル</title>
+  <meta charset="utf-8">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+  <script src="../../../vender/js/konva@3.1.0.js"></script>
+  <script src="../../lib/base.js"></script>
+  <script src="../../lib/myMathJax.js"></script>
+  <script src="../../lib/myKonva.js"></script>
+  <script src="../../lib/ui.js"></script>
+  <script src="../../lib/myMath.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../css/graph.css">
+  <style>
+  .inputSlider label, .labelText label {
+    width:3.5em;
+  }
+  </style>
+</head>
+
+<body>
+  
+  <header>
+    <h1>ベクトルは方向と大きさを持つ</h1>
+  </header>
+  <div class="wrapper">
+    <div id="container"></div>
+    <div id="inspector">
+      <ul>
+        <li id="explain"></li>
+      </ul>
+    </div>
+  </div>
+
+<script>
+
+//-----------------------------------------------------------------------------
+// アプリケーション
+class App extends AppBase{
+  constructor() {
+    super();
+  }
+
+  // 方程式
+  fx(x) {
+    return this.quad.fx(x);
+  }
+
+  beforeProc() {
+    // 二次関数
+    this.quad1 = new MyMath.Quadratic();
+    this.quad2 = new MyMath.Quadratic();
+  }
+  
+  initData() {
+    return  {
+      ax1:0,
+      ay1:1,
+      ax2:1,
+      ay2:2,
+      bx1:0,
+      by1:0,
+      bx2:-1,
+      by2:-1,
+    }
+  }
+  //---------------------------------------------------------------------------
+  // dom making
+  //---------------------------------------------------------------------------
+  makeDom() {
+    return {
+      text: {
+        explain: Util.id("explain"),
+      }
+    }
+  }
+
+  //---------------------------------------------------------------------------
+  // Events
+  //---------------------------------------------------------------------------
+  onChange(e) {
+    this.drawMath();
+  }
+
+  //---------------------------------------------------------------------------
+  // update Shapes
+  //---------------------------------------------------------------------------
+  makeShapes() {
+    return {
+      quad1     : sShape.solidLine(),  // ２次関数A
+      apex1     : this.makeApex1(),    // 式Aの頂点
+      pass1     : this.makePass1(),    // 式Aの通過点
+      quad2     : sShape.solidLine(),  // ２次関数B
+      apex2     : this.makeApex2(),    // 式Bの頂点
+      pass2     : this.makePass2(),    // 式Bの通過点
+      point1    : sShape.dot("#f00").radius(6),    // 交点１
+      point2    : sShape.dot("#f00").radius(6),    // 交点２
+      vector    : sShape.arrow().points([0, 0, 1, 1]),
+    }
+  }
+
+  makeApex1() {
+    return sShape.dot("#00f")
+      .xy(this.data.ax1, this.data.ay1)
+      .draggable()
+      .onDragMove((e) => {
+        const pos = getLocalXY(e);
+        this.data.ax1 = pos.x;
+        this.data.ay1 = pos.y;
+        this.drawGraph();
+      });
+  }
+
+  makePass1() {
+    return sShape.dot("#00f")
+      .xy(this.data.ax2, this.data.ay2)
+      .draggable()
+      .onDragMove((e) => {
+        const pos = getLocalXY(e);
+        this.data.ax2 = pos.x;
+        this.data.ay2 = pos.y;
+        this.drawGraph();
+      });
+  }
+
+  makeApex2() {
+    return sShape.dot("#00f")
+      .xy(this.data.bx1, this.data.by1)
+      .draggable()
+      .onDragMove((e) => {
+        const pos = getLocalXY(e);
+        this.data.bx1 = pos.x;
+        this.data.by1 = pos.y;
+        this.drawGraph();
+      });
+  }
+
+  makePass2() {
+    return sShape.dot("#00f")
+      .xy(this.data.bx2, this.data.by2)
+      .draggable()
+      .onDragMove((e) => {
+        const pos = getLocalXY(e);
+        this.data.bx2 = pos.x;
+        this.data.by2 = pos.y;
+        this.drawGraph();
+      });
+  }
+
+  updateQuad1() {
+    const { ax1, ay1, ax2, ay2 } = this.data;
+    this.quad1.initByApexAndPassPoint(ax1, ay1, ax2, ay2);
+
+    this.shapes.quad1
+      .points(this.getQuadPoints(this.quad1));
+  }
+
+  updateQuad2() {
+    const { bx1, by1, bx2, by2 } = this.data;
+    this.quad2.initByApexAndPassPoint(bx1, by1, bx2, by2);
+
+    this.shapes.quad2
+      .points(this.getQuadPoints(this.quad2));
+  }
+
+  getQuadPoints(quad) {
+    const p = [];
+    for (let x = c.l; x <= c.r; x += 0.1) {
+      p.push(x, quad.fx(x));
+    }
+    return p;
+  }
+
+  updateIntersection() {
+    const intersection = MyMath.Quadratic.intersect(this.quad1, this.quad2);
+
+    const dots = [this.shapes.point1, this.shapes.point2];
+
+    dots.map((dot) => { dot.visible(false); })
+
+    for(let i = 0; i < intersection.count; i++) {
+      dots[i].visible(true);
+      dots[i].xy(intersection.points[i*2], intersection.points[i*2+1]);
+    }
+  }
+
+  //---------------------------------------------------------------------------
+  // Draw
+  //---------------------------------------------------------------------------
+  drawMath() {
+  }
+
+  drawGraph() {
+    this.updateQuad1();
+    this.updateQuad2();
+    this.updateIntersection();
+    this.graph.draw();
+  }
+
+  drawInspector() {
+    const { explain } = this.dom.text;
+    explain.innerText = `青丸はドラッグ可能、交点に赤丸が表示される。`
+  }
+}
+
+const app = new App();
+app.draw();
+
+</script> 
+</body>
+</html>

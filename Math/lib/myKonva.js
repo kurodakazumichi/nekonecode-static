@@ -105,6 +105,12 @@ class Shape {
   draggable(flg = true) {
     this.node.setAttr("draggable", flg); return this;
   }
+  pointerLength(len) {
+    this.node.setAttr("pointerLength", len);
+  }
+  pointerWidth(width) {
+    this.node.setAttr("pointerWidth", width);
+  }
 
   onMouseMove(cb) {
     this.node.on('mousemove', cb);
@@ -141,6 +147,19 @@ class ShapeText extends Shape {
   }
 }
 
+/** Arrow  */
+class ShapeArrow extends Shape {
+  createNode() {
+    return new Konva.Arrow({
+      strokeWidth:2, 
+      pointerLength: 10,
+      pointerWidth: 10,
+      stroke:"black",
+      fill : "black",
+    });
+  }
+}
+
 /******************************************************************************
  * 形状システム
  *****************************************************************************/
@@ -165,6 +184,9 @@ class ShapeSystem {
   }
   text(text="", size=15, color="black"){
     return new ShapeText().text(text).fontSize(size).fill(color);
+  }
+  arrow(width=2, color="black") {
+    return new ShapeArrow().strokeWidth(width).stroke(color).fill(color);
   }
 }
 const sShape = new ShapeSystem();

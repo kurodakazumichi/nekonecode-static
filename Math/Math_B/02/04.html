@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>数学B ベクトル</title>
+  <meta charset="utf-8">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+  <script src="../../../vender/js/konva@3.1.0.js"></script>
+  <script src="../../lib/base.js"></script>
+  <script src="../../lib/myMathJax.js"></script>
+  <script src="../../lib/myKonva.js"></script>
+  <script src="../../lib/ui.js"></script>
+  <script src="../../lib/myMath.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../css/graph.css">
+  <style>
+  .inputSlider label, .labelText label {
+    width:3.5em;
+  }
+  </style>
+</head>
+
+<body>
+  
+  <header>
+    <h1>２つのベクトルがなす角</h1>
+  </header>
+  <div class="wrapper">
+    <div id="container"></div>
+    <div id="inspector">
+      <ul>
+        <li id="explain"></li>
+      </ul>
+    </div>
+  </div>
+
+<script>
+
+//-----------------------------------------------------------------------------
+// アプリケーション
+class App extends AppBase{
+  constructor() {
+    super();
+  }
+
+  beforeProc() {
+    // ベクトル
+    this.a = MyMath.Vector2.right.times(3);
+    this.b = MyMath.Vector2.one.times(3);
+  }
+
+  /** 設定の初期化 */
+  initConfig() {
+    c.setUnit(50);
+  }
+  
+  initData() {
+    return  {}
+  }
+  //---------------------------------------------------------------------------
+  // dom making
+  //---------------------------------------------------------------------------
+  makeDom() {
+    return {
+      text: {
+        explain: Util.id("explain"),
+      }
+    }
+  }
+
+  //---------------------------------------------------------------------------
+  // update Shapes
+  //---------------------------------------------------------------------------
+  makeShapes() {
+    return {
+      wedge: sShape.wedge().xy(0, 0).radius(50),
+      va   : sShape.arrow(3, "#f00"),
+      vb   : sShape.arrow(3, "#00f"),
+      pa   : this.makePA(),
+      pb   : this.makePB(),
+      angle: sShape.text().fontSize(30),
+
+      tmp : sShape.dot(),
+    }
+  }
+
+  makePA() {
+    return sShape.dot("#f00")
+      .xy(this.a.x, this.a.y)
+      .radius(6)
+      .draggable()
+      .onDragMove((e) => {
+        const pos = getLocalXY(e);
+        this.a.x = pos.x;
+        this.a.y = pos.y;
+        this.drawGraph();
+      });
+  }
+
+  makePB() {
+    return sShape.dot("#f00")
+      .xy(this.b.x, this.b.y)
+      .radius(6)
+      .draggable()
+      .onDragMove((e) => {
+        const pos = getLocalXY(e);
+        this.b.x = pos.x;
+        this.b.y = pos.y;
+        this.drawGraph();
+      })
+  }
+
+  updatePoint() {
+    this.shapes.pa.xy(this.a.x, this.a.y);
+    this.shapes.pb.xy(this.b.x, this.b.y);
+  }
+
+  updateVector() {
+    this.shapes.va.points([0, 0, this.a.x, this.a.y]);
+    this.shapes.vb.points([0, 0, this.b.x, this.b.y]);
+  }
+
+  updateAngle() {
+    
+    const cross = MyMath.Vector2.cross(this.a, this.b);
+    const angle = MyMath.Util.rad2deg(MyMath.Vector2.angle(this.a, this.b));
+
+    // 基準とするベクトルを決める
+    const base  = (cross < 0)? this.b : this.a;
+
+    let bias = MyMath.Util.rad2deg(
+      MyMath.Vector2.angle(MyMath.Vector2.right, base)
+    );
+
+    // 基準ベクトルが第一象限の場合
+    if (0 <= base.x && 0 <= base.y) {
+      bias = -angle - bias;
+    }
+
+    // 基準ベクトルが第二象限の場合
+    if (base.x < 0 && 0 <= base.y) {
+      bias = -angle - bias;
+    }
+
+    // 基準ベクトルが第三象限の場合
+    if (base.x < 0 && base.y < 0) {
+      bias = - angle - (360 - bias);
+    }
+
+    // 基準ベクトルが第四象限の場合
+    if (0 <= base.x && base.y < 0) {
+      bias = - angle + bias;
+    }
+
+    this.shapes.wedge
+      .rotation(bias)
+      .angle(angle);
+
+    const maybeC = MyMath.Vector2.add(this.a.normalize, this.b.normalize);
+
+    if (!MyMath.Vector2.isZero(maybeC)) {
+      const c = maybeC.normalize.times(2)
+      this.shapes.angle.xy(c.x, c.y);
+    }
+    this.shapes.angle.text(angle.toFixed(1));
+
+  }
+
+  //---------------------------------------------------------------------------
+  // Draw
+  //---------------------------------------------------------------------------
+  drawGraph() {
+    this.updateVector();
+    this.updatePoint();
+    this.updateAngle();
+    this.graph.draw();
+  }
+
+  drawInspector() {
+    const { explain } = this.dom.text;
+    explain.innerText = `赤丸をドラッグするとベクトルを動かせる。`
+  }
+}
+
+const app = new App();
+app.draw();
+
+</script> 
+</body>
+</html>

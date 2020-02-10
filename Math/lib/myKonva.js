@@ -106,10 +106,16 @@ class Shape {
     this.node.setAttr("draggable", flg); return this;
   }
   pointerLength(len) {
-    this.node.setAttr("pointerLength", len);
+    this.node.setAttr("pointerLength", len); return this;
   }
   pointerWidth(width) {
-    this.node.setAttr("pointerWidth", width);
+    this.node.setAttr("pointerWidth", width); return this;
+  }
+  angle(a) {
+    this.node.setAttr("angle", a); return this;
+  }
+  rotation(r) {
+    this.node.setAttr("rotation", r); return this;
   }
 
   onMouseMove(cb) {
@@ -160,6 +166,18 @@ class ShapeArrow extends Shape {
   }
 }
 
+
+/** Wedge */
+class ShapeWedge extends Shape {
+  createNode() {
+    return new Konva.Wedge({
+      radius:20,
+      fill:"gray",
+    })
+  }
+}
+
+
 /******************************************************************************
  * 形状システム
  *****************************************************************************/
@@ -187,6 +205,9 @@ class ShapeSystem {
   }
   arrow(width=2, color="black") {
     return new ShapeArrow().strokeWidth(width).stroke(color).fill(color);
+  }
+  wedge(width=0) {
+    return new ShapeWedge().strokeWidth(width);
   }
 }
 const sShape = new ShapeSystem();

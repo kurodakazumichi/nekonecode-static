@@ -29,7 +29,7 @@ function init() {
 
   // 画像を読み込む
   const loader = new THREE.TextureLoader();
-  const texture = loader.load('me.png');
+  const texture = loader.load('../../assets/texture/me.png');
 
   // マテリアルに画像を設定
   const material = new THREE.MeshStandardMaterial({map:texture});

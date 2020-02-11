@@ -34,7 +34,7 @@ function init() {
 
   // ジオメトリを作成
   const geometries = [
-    new THREE.SphereGeometry(50),
+    new THREE.SphereGeometry(50, 32, 32),
     new THREE.BoxGeometry(100, 100, 100),
     new THREE.PlaneGeometry(100, 100),
     new THREE.TetrahedronGeometry(100, 0),
